@@ -3,6 +3,7 @@
     clippy::comparison_chain,
     clippy::collapsible_else_if
 )]
+use itertools::Itertools;
 use proconio::{input, marker::Chars};
 
 pub type Output = Vec<char>;
@@ -53,7 +54,16 @@ fn construct(input: &Input, tree_tiles: &mut [Vec<usize>]) {
     // inputのタイルと木のタイルで番号付けを行う
     // スライディングパズルを解く
     let mut tiles = input.tiles.clone();
-
+    println!();
+    for row in tiles.iter_mut() {
+        for t in row.iter_mut() {
+            if *t == 0 {
+                *t = 16;
+            }
+            print!("{:2} ", t);
+        }
+        println!();
+    }
     for i in 0..input.n {
         if i == input.n - 3 {
             break;
@@ -66,6 +76,13 @@ fn construct(input: &Input, tree_tiles: &mut [Vec<usize>]) {
             // tiles[i2][i]
             slide((i2, i), input, &mut tiles, tree_tiles);
         }
+    }
+    println!();
+    for row in tiles.iter() {
+        for t in row.iter() {
+            print!("{:2} ", t);
+        }
+        println!();
     }
 }
 
@@ -83,7 +100,7 @@ fn slide(
     let mut now = || -> (usize, usize) {
         for i in start..input.n {
             for j in start..input.n {
-                if (i < tar.0) || (i == tar.0 && j <= tar.1) {
+                if (i < tar.0) || (i == tar.0 && j < tar.1) {
                     continue;
                 }
                 if tree_tiles[tar.0][tar.1] == tiles[i][j] {
@@ -91,14 +108,14 @@ fn slide(
                 }
             }
         }
-        (0_usize, 0_usize)
+        (input.n, input.n)
     }();
 
     // スライドさせる空きマスの位置を取得
     let mut empty = || -> (usize, usize) {
         for i in start..input.n {
             for j in start..input.n {
-                if (i < tar.0) || (i == tar.0 && j <= tar.1) {
+                if (i < tar.0) || (i == tar.0 && j < tar.1) {
                     continue;
                 }
                 if 16 == tiles[i][j] {
@@ -106,8 +123,13 @@ fn slide(
                 }
             }
         }
-        (0_usize, 0_usize)
+        (input.n, input.n)
     }();
+
+    println!(
+        "tar: {} {}, now: {} {}, empty: {} {}",
+        tar.0, tar.1, now.0, now.1, empty.0, empty.1
+    );
 
     // now(i,j) を tar(i,j) にスライドさせる
     // (i < tar.0) || (i == tar.0 && j <= tar.1) || (j < start) の
@@ -232,6 +254,10 @@ fn slide(
                 // nowとtarのiを揃える
                 for _ in 0..(now.0 - tar.0 - 1) {
                     out.push('D');
+                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                    tiles[empty.0 + 1][empty.1] = 16;
+                    empty.0 += 1;
+                    now.0 -= 1;
                     if now.1 != input.n - 1 {
                         out.push('R');
                         tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
@@ -272,6 +298,7 @@ fn slide(
                 tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
                 tiles[empty.0 + 1][empty.1] = 16;
                 empty.0 += 1;
+                now.0 -= 1;
             } else if tar.0 > now.0 {
                 // nowを下に持って行く
                 // まず空きマスの列を揃える
@@ -389,6 +416,7 @@ fn slide(
                     tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
                     tiles[empty.0 - 1][empty.1] = 16;
                     empty.0 -= 1;
+                    now.0 += 1;
                     if now.1 != input.n - 1 {
                         out.push('R');
                         tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
@@ -429,7 +457,7 @@ fn slide(
                 tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
                 tiles[empty.0 - 1][empty.1] = 16;
                 empty.0 -= 1;
-                empty.0 -= 1;
+                now.0 += 1;
             }
             // tar とnow のiは揃った
             // jを揃える
@@ -575,6 +603,7 @@ fn slide(
                     tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
                     tiles[empty.0][empty.1 + 1] = 16;
                     empty.1 += 1;
+                    now.1 -= 1;
                     out.push('D');
                     tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
                     tiles[empty.0 + 1][empty.1] = 16;
@@ -596,6 +625,7 @@ fn slide(
                 tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
                 tiles[empty.0][empty.1 + 1] = 16;
                 empty.1 += 1;
+                now.1 -= 1;
             } else if tar.1 > now.1 {
                 // あるのか？
                 // 今tar.0 > tar.1なのでnow.1 はtar.1以上しか扱えないはず
@@ -718,6 +748,7 @@ fn slide(
                     tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
                     tiles[empty.0][empty.1 + 1] = 16;
                     empty.1 += 1;
+                    now.1 -= 1;
                     if empty.0 != input.n - 1 {
                         out.push('D');
                         tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
@@ -758,6 +789,7 @@ fn slide(
                 tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
                 tiles[empty.0][empty.1 + 1] = 16;
                 empty.1 += 1;
+                now.1 -= 1;
             } else if tar.1 > now.1 {
                 // now の右に空きマスを持って行く
                 // まず空きマスの行を揃える
@@ -875,6 +907,7 @@ fn slide(
                     tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
                     tiles[empty.0][empty.1 - 1] = 16;
                     empty.1 -= 1;
+                    now.1 += 1;
                     if empty.0 != input.n - 1 {
                         out.push('D');
                         tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
@@ -915,6 +948,7 @@ fn slide(
                 tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
                 tiles[empty.0][empty.1 - 1] = 16;
                 empty.1 -= 1;
+                now.1 += 1;
             }
             // tarとnowのjが揃った
             // iを揃える
@@ -1054,12 +1088,13 @@ fn slide(
                     }
                 }
                 // 空きマスがnowの上に来た
-                // nowとtarのjを揃える
+                // nowとtarのiを揃える
                 for _ in 0..(now.0 - tar.0 - 1) {
                     out.push('D');
                     tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
                     tiles[empty.0 + 1][empty.1] = 16;
                     empty.0 += 1;
+                    now.0 -= 1;
                     out.push('R');
                     tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
                     tiles[empty.0][empty.1 + 1] = 16;
@@ -1081,6 +1116,7 @@ fn slide(
                 tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
                 tiles[empty.0 + 1][empty.1] = 16;
                 empty.0 += 1;
+                now.0 -= 1;
             } else if tar.0 > now.0 {
                 // あるのか？
                 // 今tar.0 <= tar.1なのでnow.0 はtar.0以上しか扱えないはず
@@ -1089,6 +1125,13 @@ fn slide(
         }
     } else {
         // 2個入れる
+    }
+    println!("{}", out.iter().join(""));
+    for row in tiles.iter() {
+        for t in row.iter() {
+            print!("{:2} ", t);
+        }
+        println!();
     }
 }
 
