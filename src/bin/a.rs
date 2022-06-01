@@ -843,6 +843,13 @@ fn slide(
         }
         (input.n, input.n)
     }();
+    // eprintln!("tar:{:?}, now:{:?}, empty:{:?}", tar, now, empty);
+    // for row in tiles.iter() {
+    //     for t in row.iter() {
+    //         eprint!("{:2} ", t);
+    //     }
+    //     eprintln!();
+    // }
 
     // now(i,j) を tar(i,j) にスライドさせる
     // (i < tar.0) || (i == tar.0 && j <= tar.1) || (j < start) の
@@ -1274,14 +1281,13 @@ fn slide(
                         tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
                         tiles[empty.0][empty.1 + 1] = 16;
                         empty.1 += 1;
-                        out.push('D');
-                        tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                        tiles[empty.0 + 1][empty.1] = 16;
-                        empty.0 += 1;
-                        out.push('D');
-                        tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                        tiles[empty.0 + 1][empty.1] = 16;
-                        empty.0 += 1;
+                        // 一番下のマスをここで揃えることはないので+1まで空きマスが行って大丈夫
+                        for _ in 0..(now.0 - empty.0 + 1) {
+                            out.push('D');
+                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                            tiles[empty.0 + 1][empty.1] = 16;
+                            empty.0 += 1;
+                        }
                         out.push('L');
                         tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
                         tiles[empty.0][empty.1 - 1] = 16;
@@ -1779,19 +1785,18 @@ fn slide(
             } else {
                 if now.1 > empty.1 {
                     if tar.0 == now.0 - 1 {
-                        // 空きマスは左に進めないので迂回
+                        // 空きマスは上に進めないので迂回
                         out.push('D');
                         tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
                         tiles[empty.0 + 1][empty.1] = 16;
                         empty.0 += 1;
-                        out.push('R');
-                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                        tiles[empty.0][empty.1 + 1] = 16;
-                        empty.1 += 1;
-                        out.push('R');
-                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                        tiles[empty.0][empty.1 + 1] = 16;
-                        empty.1 += 1;
+                        // 一番右のマスをここで揃えることはないので+1まで空きマスが行って大丈夫
+                        for _ in 0..(now.1 - empty.1 + 1) {
+                            out.push('R');
+                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                            tiles[empty.0][empty.1 + 1] = 16;
+                            empty.1 += 1;
+                        }
                         out.push('U');
                         tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
                         tiles[empty.0 - 1][empty.1] = 16;
@@ -1955,8 +1960,6 @@ fn dfs(
     tile_is: &[Vec<Vec<usize>>],
     count: &mut usize,
 ) -> bool {
-    // アイデア: input.tiles上でBFSする
-
     // 今のposに置くタイルを決める
     for &tile_i in tile_is[pos.0][pos.1].iter() {
         if tile_count[tile_i] == 0 {
@@ -2088,7 +2091,7 @@ fn dfs(
         }
     }
     *count += 1;
-    // if *count <= 100 && *count % 10 == 0 {
+    // if *count <= 1000 && *count % 100 == 0 {
     //     eprintln!("count: {}", count);
     //     eprintln!("{:?}", tile_count);
     //     for row in now_tiles.iter() {
