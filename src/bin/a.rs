@@ -34,13 +34,16 @@ fn main() {
     let mut now_tiles = vec![vec![0; input.n]; input.n];
     now_tiles[input.n - 1][input.n - 1] = 16;
     let mut next_poses = vec![];
+    let mut count = 0;
     if dfs(
         (0, 0),
         &input,
         &mut tile_count,
         &mut now_tiles,
         &mut next_poses,
+        &mut count,
     ) {
+        eprintln!("count: {}", count);
         for row in now_tiles.iter() {
             for t in row.iter() {
                 eprint!("{:2} ", t);
@@ -151,6 +154,8 @@ fn construct(input: &Input, tree_tiles: &mut [Vec<usize>]) -> Output {
     for oi in out_i {
         out.push(oi);
     }
+    // 3x3でtilesを動かしてないのでここで出力しても一見そろってない
+    // が、goalしていたらoutは揃っている
     out
 }
 
@@ -476,14 +481,14 @@ fn slide2(
                 // bを1個右に移動させる
                 // 列を合わせてから行を合わせる
                 if empty.1 <= b_now.1 {
-                    for _ in 0..(b_now.1 - empty.1) {
+                    for _ in 0..(b_now.1 - empty.1 + 1) {
                         out.push('R');
                         tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
                         tiles[empty.0][empty.1 + 1] = 16;
                         empty.1 += 1;
                     }
                 }
-                for _ in 0..(empty.1 - b_now.1) {
+                for _ in 0..(empty.0 - b_now.0) {
                     out.push('U');
                     tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
                     tiles[empty.0 - 1][empty.1] = 16;
@@ -644,14 +649,14 @@ fn slide2(
                 // bを1個下に移動させる
                 // 行を合わせてから列を合わせる
                 if empty.0 <= b_now.0 {
-                    for _ in 0..(b_now.0 - empty.0) {
+                    for _ in 0..(b_now.0 - empty.0 + 1) {
                         out.push('D');
                         tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
                         tiles[empty.0 + 1][empty.1] = 16;
                         empty.0 += 1;
                     }
                 }
-                for _ in 0..(empty.0 - b_now.0) {
+                for _ in 0..(empty.1 - b_now.1) {
                     out.push('L');
                     tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
                     tiles[empty.0][empty.1 - 1] = 16;
@@ -1744,7 +1749,10 @@ fn dfs(
     tile_count: &mut [i32],
     now_tiles: &mut [Vec<usize>],
     next_poses: &mut Vec<(usize, usize)>,
+    count: &mut usize,
 ) -> bool {
+    // アイデア: input.tiles上でBFSする
+
     // 今のposに置くタイルを決める
     for tile_i in 1..16 {
         if tile_count[tile_i] == 0 {
@@ -1797,6 +1805,7 @@ fn dfs(
                         tile_count,
                         now_tiles,
                         next_poses,
+                        count,
                     ) {
                         return true;
                     }
@@ -1808,7 +1817,7 @@ fn dfs(
                 for &(i2, j2) in dij.iter() {
                     now_tiles[pos.0][pos.1] = tile_i;
                     tile_count[tile_i] -= 1;
-                    if dfs((i2, j2), input, tile_count, now_tiles, next_poses) {
+                    if dfs((i2, j2), input, tile_count, now_tiles, next_poses, count) {
                         return true;
                     }
                     now_tiles[pos.0][pos.1] = 0;
@@ -1818,6 +1827,16 @@ fn dfs(
                     next_poses.pop();
                 }
             }
+        }
+    }
+    *count += 1;
+    if *count <= 100 && *count % 10 == 0 {
+        eprintln!("count: {}", count);
+        for row in now_tiles.iter() {
+            for t in row.iter() {
+                eprint!("{:2} ", t);
+            }
+            eprintln!();
         }
     }
     false

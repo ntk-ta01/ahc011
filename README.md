@@ -71,3 +71,18 @@ DDDLDRUULDRUULDRUULDRUULDDDRDRUULDRUULDRUULDDDRRRDRUULDRUULDRUULDLURDLLURDRDRUUL
 TODO: こもりさんのやつの入力からのマンハッタン距離を取ったりする
 
 6/1 3x3を実装 盤面をノードにしてBFS
+
+### 前半パートの高速化
+二部グラフに見える？辺の重みが2頂点間で決まるわけじゃないような
+入力から木を生成する割当問題？うーん
+
+DFSを枝刈りで早くする？
+
+まだslide2のバグがあった -> 直した aをtar_bに持ってきた後にtar_aにbがあるとまずい
+
+4x4全探索できそうじゃない？（意外と被りが多いので）
+tiles2numをどうにかすれば
+
+3x3を適用して、いい感じのを先に置いておく
+
+3x3各地適用や4x4ができてもdfs高速化は必要だな（見つからなかったら結局1から探すので）
