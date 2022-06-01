@@ -1901,7 +1901,7 @@ fn dfs(
                 {
                     now_tiles[pos.0][pos.1] = 0;
                     tile_count[tile_i] += 1;
-                    return false;
+                    continue;
                 }
                 for ni in (0..next_poses.len()).rev() {
                     if now_tiles[next_poses[ni].0][next_poses[ni].1] != 0 {
@@ -1930,10 +1930,7 @@ fn dfs(
                     {
                         now_tiles[pos.0][pos.1] = 0;
                         tile_count[tile_i] += 1;
-                        for _ in 0..dij.len() {
-                            next_poses.pop();
-                        }
-                        return false;
+                        continue;
                     }
                     if dfs((i2, j2), input, tile_count, now_tiles, next_poses, count) {
                         return true;
