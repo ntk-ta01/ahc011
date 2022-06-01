@@ -5,8 +5,9 @@
     clippy::same_item_push
 )]
 use itertools::Itertools;
+use permutohedron::LexicalPermutation;
 use proconio::{input, marker::Chars};
-use std::vec;
+use std::{collections::HashMap, vec};
 
 pub type Output = Vec<char>;
 
@@ -47,17 +48,9 @@ fn main() {
             eprintln!();
         }
     }
-
     // 見つけた木となるような操作列の構築
     let out = construct(&input, &mut now_tiles);
     println!("{}", out.iter().join(""));
-
-    for row in now_tiles.iter() {
-        for t in row.iter() {
-            eprint!("{:2} ", t);
-        }
-        eprintln!();
-    }
 }
 
 fn get_now(
@@ -154,202 +147,145 @@ fn construct(input: &Input, tree_tiles: &mut [Vec<usize>]) -> Output {
         }
     }
     // 3*3を完成させる
-    let out_i = slide3x3(input, &mut fix, &mut tiles, tree_tiles);
+    let out_i = slide3x3(input, &mut tiles, tree_tiles);
     for oi in out_i {
         out.push(oi);
     }
     out
 }
 
-fn slide3x3(
-    input: &Input,
-    fix: &mut [Vec<bool>],
-    tiles: &mut [Vec<usize>],
-    tree_tiles: &mut [Vec<usize>],
-) -> Output {
+fn slide3x3(input: &Input, tiles: &mut [Vec<usize>], tree_tiles: &mut [Vec<usize>]) -> Output {
     let mut out = vec![];
-    for i in input.n - 3..input.n - 2 {
-        for j in i..input.n - 1 {
-            if i == j {
-                let now = get_now(i, (i, j), fix, input, tiles, tree_tiles);
-                let out_i = slide((i, j), now, input, tiles);
-                fix[i][j] = true;
-                for oi in out_i {
-                    out.push(oi);
-                }
+
+    let mut tiles3x3 = vec![];
+    for i in 0..3 {
+        for j in 0..3 {
+            if tiles[i + input.n - 3][j + input.n - 3] == 16 {
+                tiles3x3.push(0);
             } else {
-                let out_i = slide2((i, j + 1), (i, j), fix, input, tiles, tree_tiles);
-                fix[i][j] = true;
-                fix[i][j + 1] = true;
-                for oi in out_i {
-                    out.push(oi);
-                }
-            }
-        }
-        for i2 in i + 1..input.n - 1 {
-            let out_i = slide2((i2 + 1, i), (i2, i), fix, input, tiles, tree_tiles);
-            fix[i2][i] = true;
-            fix[i2 + 1][i] = true;
-            for oi in out_i {
-                out.push(oi);
+                tiles3x3.push(tiles[i + input.n - 3][j + input.n - 3]);
             }
         }
     }
-    // TODO:↑のようにするより2x2の外周を揃えるところもっと手数を短くできるので
-    // "8パズル 解き方"でググって出てくるBFSとかを書いた方が良い
 
-    // 残りの2x2を揃える
-
-    // 右回りで回す
-    let mut tiles2x2 = vec![vec![16; 2]; 2];
-    for i in 0..2 {
-        for j in 0..2 {
-            tiles2x2[i][j] = tiles[input.n - 2 + i][input.n - 2 + j];
-        }
-    }
-    // スライドさせる空きマスの位置を取得
-    let mut empty = || -> (usize, usize) {
-        for i in 0..2 {
-            for j in 0..2 {
-                if 16 == tiles2x2[i][j] {
-                    return (i, j);
-                }
+    let mut goal = vec![];
+    for i in 0..3 {
+        for j in 0..3 {
+            if tree_tiles[i + input.n - 3][j + input.n - 3] == 16 {
+                goal.push(0);
+            } else {
+                goal.push(tree_tiles[i + input.n - 3][j + input.n - 3]);
             }
         }
-        (input.n, input.n)
-    }();
-    let mut out_r = vec![];
-    for _ in 0..13 {
-        if empty.0 == 0 && empty.1 == 0 {
-            out_r.push('R');
-            tiles2x2[empty.0][empty.1] = tiles2x2[empty.0][empty.1 + 1];
-            tiles2x2[empty.0][empty.1 + 1] = 16;
-            empty.1 += 1;
-        } else if empty.0 == 0 && empty.1 == 1 {
-            out_r.push('D');
-            tiles2x2[empty.0][empty.1] = tiles2x2[empty.0 + 1][empty.1];
-            tiles2x2[empty.0 + 1][empty.1] = 16;
-            empty.0 += 1;
-        } else if empty.0 == 1 && empty.1 == 0 {
-            out_r.push('U');
-            tiles2x2[empty.0][empty.1] = tiles2x2[empty.0 - 1][empty.1];
-            tiles2x2[empty.0 - 1][empty.1] = 16;
-            empty.0 -= 1;
-        } else {
-            out_r.push('L');
-            tiles2x2[empty.0][empty.1] = tiles2x2[empty.0][empty.1 - 1];
-            tiles2x2[empty.0][empty.1 - 1] = 16;
-            empty.1 -= 1;
+    }
+    // 盤面列挙
+    let mut ord = vec![0, 1, 2, 3, 4, 5, 6, 7, 8];
+    let mut vs = vec![];
+    loop {
+        let mut v = 0;
+        let mut n = 1;
+        for o in ord.iter() {
+            v += tiles3x3[*o] * n;
+            n *= 16;
         }
-        if tiles2x2.iter().enumerate().all(|(ti, row)| {
-            row.iter()
-                .enumerate()
-                .all(|(tj, t)| *t == tree_tiles[input.n - 2 + ti][input.n - 2 + tj])
-        }) {
+        vs.push(v);
+        if !ord.next_permutation() {
             break;
         }
     }
-    for i in 0..2 {
-        for j in 0..2 {
-            tiles2x2[i][j] = tiles[input.n - 2 + i][input.n - 2 + j];
+    vs.sort_unstable();
+    vs.dedup();
+    let map = vs
+        .into_iter()
+        .enumerate()
+        .map(|(i, e)| (e, i))
+        .collect::<HashMap<usize, usize>>();
+    let tiles2num = |tiles3x3: &[usize]| -> usize {
+        let mut v = 0;
+        let mut n = 1;
+        for t in tiles3x3.iter() {
+            v += *t * n;
+            n *= 16;
         }
-    }
-    let mut empty = || -> (usize, usize) {
-        for i in 0..2 {
-            for j in 0..2 {
-                if 16 == tiles2x2[i][j] {
-                    return (i, j);
-                }
-            }
+        v
+    };
+    let num2tiles = |num: usize, n: usize| -> Vec<usize> {
+        let mut v = num;
+        let mut n = n;
+        let mut vs = vec![];
+        while v > 0 {
+            n /= 16;
+            vs.push(v / n);
+            v %= n;
         }
-        (input.n, input.n)
-    }();
-    let mut out_l = vec![];
-    // 左回りで回す
-    for _ in 0..13 {
-        if empty.0 == 0 && empty.1 == 0 {
-            out_l.push('D');
-            tiles2x2[empty.0][empty.1] = tiles2x2[empty.0 + 1][empty.1];
-            tiles2x2[empty.0 + 1][empty.1] = 16;
-            empty.0 += 1;
-        } else if empty.0 == 0 && empty.1 == 1 {
-            out_l.push('L');
-            tiles2x2[empty.0][empty.1] = tiles2x2[empty.0][empty.1 - 1];
-            tiles2x2[empty.0][empty.1 - 1] = 16;
-            empty.1 -= 1;
-        } else if empty.0 == 1 && empty.1 == 0 {
-            out_l.push('R');
-            tiles2x2[empty.0][empty.1] = tiles2x2[empty.0][empty.1 + 1];
-            tiles2x2[empty.0][empty.1 + 1] = 16;
-            empty.1 += 1;
-        } else {
-            out_l.push('U');
-            tiles2x2[empty.0][empty.1] = tiles2x2[empty.0 - 1][empty.1];
-            tiles2x2[empty.0 - 1][empty.1] = 16;
-            empty.0 -= 1;
+        if vs.len() < 9 {
+            vs.push(v);
         }
-        if tiles2x2.iter().enumerate().all(|(ti, row)| {
-            row.iter()
-                .enumerate()
-                .all(|(tj, t)| *t == tree_tiles[input.n - 2 + ti][input.n - 2 + tj])
-        }) {
-            break;
-        }
-    }
+        vs.reverse();
+        vs
+    };
 
-    let mut empty = || -> (usize, usize) {
-        for i in input.n - 2..input.n {
-            for j in input.n - 2..input.n {
-                if 16 == tiles[i][j] {
+    let get_empty = |vs: &[usize]| -> (usize, usize) {
+        for i in 0..3 {
+            for j in 0..3 {
+                if 0 == vs[i * 3 + j] {
                     return (i, j);
                 }
             }
         }
-        (input.n, input.n)
-    }();
-    if out_r.len() < out_l.len() {
-        for or in out_r {
-            if or == 'D' {
-                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                tiles[empty.0 + 1][empty.1] = 16;
-                empty.0 += 1;
-            } else if or == 'L' {
-                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                tiles[empty.0][empty.1 - 1] = 16;
-                empty.1 -= 1;
-            } else if or == 'R' {
-                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                tiles[empty.0][empty.1 + 1] = 16;
-                empty.1 += 1;
-            } else {
-                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                tiles[empty.0 - 1][empty.1] = 16;
-                empty.0 -= 1;
+        unreachable!();
+    };
+
+    // bfs
+    let mut que = std::collections::VecDeque::new();
+    let mut dist = vec![-1; map.len()];
+    let mut prev = vec![4; map.len()];
+    let s = tiles2num(&tiles3x3);
+    let g = tiles2num(&goal);
+    if s == g {
+        return out;
+    }
+    const N: usize = 68719476736;
+    dist[map[&s]] = 0;
+    que.push_back(s);
+    'lp: while !que.is_empty() {
+        let v = que.pop_front().unwrap();
+        let vs = num2tiles(v, N);
+        let empty = get_empty(&vs);
+        for (i, &(di, dj)) in DIJ.iter().enumerate() {
+            let ni = empty.0 + di;
+            let nj = empty.1 + dj;
+            if 3 <= ni || 3 <= nj {
+                continue;
             }
-            out.push(or);
-        }
-    } else {
-        for ol in out_l {
-            if ol == 'D' {
-                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                tiles[empty.0 + 1][empty.1] = 16;
-                empty.0 += 1;
-            } else if ol == 'L' {
-                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                tiles[empty.0][empty.1 - 1] = 16;
-                empty.1 -= 1;
-            } else if ol == 'R' {
-                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                tiles[empty.0][empty.1 + 1] = 16;
-                empty.1 += 1;
-            } else {
-                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                tiles[empty.0 - 1][empty.1] = 16;
-                empty.0 -= 1;
+            let mut new_vs = vs.clone();
+            new_vs.swap(empty.0 * 3 + empty.1, ni * 3 + nj);
+            let nv = tiles2num(&new_vs);
+            if dist[map[&nv]] != -1 {
+                continue;
             }
-            out.push(ol);
+            dist[map[&nv]] = dist[map[&v]] + 1;
+            prev[map[&nv]] = i;
+            que.push_back(nv);
+            if nv == g {
+                break 'lp;
+            }
         }
     }
+    // 経路復元
+    let mut empty = get_empty(&goal);
+    let mut v = g;
+    let mut v_tiles = goal;
+    while v != s {
+        let i = prev[map[&v]];
+        out.push(DIR[i]);
+        let ni = empty.0 + DIJ[i ^ 2].0;
+        let nj = empty.1 + DIJ[i ^ 2].1;
+        v_tiles.swap(empty.0 * 3 + empty.1, ni * 3 + nj);
+        v = tiles2num(&v_tiles);
+        empty = (ni, nj);
+    }
+    out.reverse();
     out
 }
 
