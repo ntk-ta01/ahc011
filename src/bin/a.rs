@@ -42,14 +42,22 @@ fn main() {
     ) {
         for row in now_tiles.iter() {
             for t in row.iter() {
-                print!("{:2} ", t);
+                eprint!("{:2} ", t);
             }
-            println!();
+            eprintln!();
         }
     }
 
     // 見つけた木となるような操作列の構築
-    construct(&input, &mut now_tiles);
+    let out = construct(&input, &mut now_tiles);
+    println!("{}", out.iter().join(""));
+
+    for row in now_tiles.iter() {
+        for t in row.iter() {
+            eprint!("{:2} ", t);
+        }
+        eprintln!();
+    }
 }
 
 fn get_now(
@@ -60,6 +68,8 @@ fn get_now(
     tiles: &[Vec<usize>],
     tree_tiles: &[Vec<usize>],
 ) -> (usize, usize) {
+    // TODO: ここをbfsにする
+    // fix[i][j] or visited[i][j]とかにすればできるだろ
     for i in start..input.n {
         for j in start..input.n {
             if fix[i][j] {
@@ -73,7 +83,7 @@ fn get_now(
     unreachable!("not found: now:(");
 }
 
-fn construct(input: &Input, tree_tiles: &mut [Vec<usize>]) {
+fn construct(input: &Input, tree_tiles: &mut [Vec<usize>]) -> Output {
     // inputのタイルと木のタイルで番号付けを行う
     // スライディングパズルを解く
     let mut tiles = input.tiles.clone();
@@ -143,17 +153,205 @@ fn construct(input: &Input, tree_tiles: &mut [Vec<usize>]) {
             }
         }
     }
-    println!("{}", out.iter().join(""));
     // 3*3を完成させる
-    for row in tiles.iter() {
-        for t in row.iter() {
-            print!("{:2} ", t);
-        }
-        println!();
+    let out_i = slide3x3(input, &mut fix, &mut tiles, tree_tiles);
+    for oi in out_i {
+        out.push(oi);
     }
+    out
 }
 
-fn slide3x3() {}
+fn slide3x3(
+    input: &Input,
+    fix: &mut [Vec<bool>],
+    tiles: &mut [Vec<usize>],
+    tree_tiles: &mut [Vec<usize>],
+) -> Output {
+    let mut out = vec![];
+    for i in input.n - 3..input.n - 2 {
+        for j in i..input.n - 1 {
+            if i == j {
+                let now = get_now(i, (i, j), fix, input, tiles, tree_tiles);
+                let out_i = slide((i, j), now, input, tiles);
+                fix[i][j] = true;
+                for oi in out_i {
+                    out.push(oi);
+                }
+            } else {
+                let out_i = slide2((i, j + 1), (i, j), fix, input, tiles, tree_tiles);
+                fix[i][j] = true;
+                fix[i][j + 1] = true;
+                for oi in out_i {
+                    out.push(oi);
+                }
+            }
+        }
+        for i2 in i + 1..input.n - 1 {
+            let out_i = slide2((i2 + 1, i), (i2, i), fix, input, tiles, tree_tiles);
+            fix[i2][i] = true;
+            fix[i2 + 1][i] = true;
+            for oi in out_i {
+                out.push(oi);
+            }
+        }
+    }
+    // TODO:↑のようにするより2x2の外周を揃えるところもっと手数を短くできるので
+    // "8パズル 解き方"でググって出てくるBFSとかを書いた方が良い
+
+    // 残りの2x2を揃える
+
+    // 右回りで回す
+    let mut tiles2x2 = vec![vec![16; 2]; 2];
+    for i in 0..2 {
+        for j in 0..2 {
+            tiles2x2[i][j] = tiles[input.n - 2 + i][input.n - 2 + j];
+        }
+    }
+    // スライドさせる空きマスの位置を取得
+    let mut empty = || -> (usize, usize) {
+        for i in 0..2 {
+            for j in 0..2 {
+                if 16 == tiles2x2[i][j] {
+                    return (i, j);
+                }
+            }
+        }
+        (input.n, input.n)
+    }();
+    let mut out_r = vec![];
+    for _ in 0..13 {
+        if empty.0 == 0 && empty.1 == 0 {
+            out_r.push('R');
+            tiles2x2[empty.0][empty.1] = tiles2x2[empty.0][empty.1 + 1];
+            tiles2x2[empty.0][empty.1 + 1] = 16;
+            empty.1 += 1;
+        } else if empty.0 == 0 && empty.1 == 1 {
+            out_r.push('D');
+            tiles2x2[empty.0][empty.1] = tiles2x2[empty.0 + 1][empty.1];
+            tiles2x2[empty.0 + 1][empty.1] = 16;
+            empty.0 += 1;
+        } else if empty.0 == 1 && empty.1 == 0 {
+            out_r.push('U');
+            tiles2x2[empty.0][empty.1] = tiles2x2[empty.0 - 1][empty.1];
+            tiles2x2[empty.0 - 1][empty.1] = 16;
+            empty.0 -= 1;
+        } else {
+            out_r.push('L');
+            tiles2x2[empty.0][empty.1] = tiles2x2[empty.0][empty.1 - 1];
+            tiles2x2[empty.0][empty.1 - 1] = 16;
+            empty.1 -= 1;
+        }
+        if tiles2x2.iter().enumerate().all(|(ti, row)| {
+            row.iter()
+                .enumerate()
+                .all(|(tj, t)| *t == tree_tiles[input.n - 2 + ti][input.n - 2 + tj])
+        }) {
+            break;
+        }
+    }
+    for i in 0..2 {
+        for j in 0..2 {
+            tiles2x2[i][j] = tiles[input.n - 2 + i][input.n - 2 + j];
+        }
+    }
+    let mut empty = || -> (usize, usize) {
+        for i in 0..2 {
+            for j in 0..2 {
+                if 16 == tiles2x2[i][j] {
+                    return (i, j);
+                }
+            }
+        }
+        (input.n, input.n)
+    }();
+    let mut out_l = vec![];
+    // 左回りで回す
+    for _ in 0..13 {
+        if empty.0 == 0 && empty.1 == 0 {
+            out_l.push('D');
+            tiles2x2[empty.0][empty.1] = tiles2x2[empty.0 + 1][empty.1];
+            tiles2x2[empty.0 + 1][empty.1] = 16;
+            empty.0 += 1;
+        } else if empty.0 == 0 && empty.1 == 1 {
+            out_l.push('L');
+            tiles2x2[empty.0][empty.1] = tiles2x2[empty.0][empty.1 - 1];
+            tiles2x2[empty.0][empty.1 - 1] = 16;
+            empty.1 -= 1;
+        } else if empty.0 == 1 && empty.1 == 0 {
+            out_l.push('R');
+            tiles2x2[empty.0][empty.1] = tiles2x2[empty.0][empty.1 + 1];
+            tiles2x2[empty.0][empty.1 + 1] = 16;
+            empty.1 += 1;
+        } else {
+            out_l.push('U');
+            tiles2x2[empty.0][empty.1] = tiles2x2[empty.0 - 1][empty.1];
+            tiles2x2[empty.0 - 1][empty.1] = 16;
+            empty.0 -= 1;
+        }
+        if tiles2x2.iter().enumerate().all(|(ti, row)| {
+            row.iter()
+                .enumerate()
+                .all(|(tj, t)| *t == tree_tiles[input.n - 2 + ti][input.n - 2 + tj])
+        }) {
+            break;
+        }
+    }
+
+    let mut empty = || -> (usize, usize) {
+        for i in input.n - 2..input.n {
+            for j in input.n - 2..input.n {
+                if 16 == tiles[i][j] {
+                    return (i, j);
+                }
+            }
+        }
+        (input.n, input.n)
+    }();
+    if out_r.len() < out_l.len() {
+        for or in out_r {
+            if or == 'D' {
+                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                tiles[empty.0 + 1][empty.1] = 16;
+                empty.0 += 1;
+            } else if or == 'L' {
+                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                tiles[empty.0][empty.1 - 1] = 16;
+                empty.1 -= 1;
+            } else if or == 'R' {
+                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                tiles[empty.0][empty.1 + 1] = 16;
+                empty.1 += 1;
+            } else {
+                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                tiles[empty.0 - 1][empty.1] = 16;
+                empty.0 -= 1;
+            }
+            out.push(or);
+        }
+    } else {
+        for ol in out_l {
+            if ol == 'D' {
+                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                tiles[empty.0 + 1][empty.1] = 16;
+                empty.0 += 1;
+            } else if ol == 'L' {
+                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                tiles[empty.0][empty.1 - 1] = 16;
+                empty.1 -= 1;
+            } else if ol == 'R' {
+                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                tiles[empty.0][empty.1 + 1] = 16;
+                empty.1 += 1;
+            } else {
+                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                tiles[empty.0 - 1][empty.1] = 16;
+                empty.0 -= 1;
+            }
+            out.push(ol);
+        }
+    }
+    out
+}
 
 fn slide2(
     tar_a: (usize, usize),
@@ -612,22 +810,22 @@ fn slide(
                     }
                 } else {
                     // tar.0 > empty.0
-                    for _ in 0..(empty.0 - now.0 - 1) {
+                    for _ in 0..(empty.1 - now.1 - 1) {
                         out.push('L');
-                        tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                        tiles[empty.0 - 1][empty.1] = 16;
-                        empty.0 -= 1;
+                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                        tiles[empty.0][empty.1 - 1] = 16;
+                        empty.1 -= 1;
                     }
-                    for _ in 0..(tar.1 - empty.1) {
+                    for _ in 0..(tar.0 - empty.0) {
                         out.push('D');
-                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                        tiles[empty.0][empty.1 + 1] = 16;
-                        empty.1 += 1;
+                        tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                        tiles[empty.0 + 1][empty.1] = 16;
+                        empty.0 += 1;
                     }
                     out.push('L');
-                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                    tiles[empty.0 - 1][empty.1] = 16;
-                    empty.0 -= 1;
+                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                    tiles[empty.0][empty.1 - 1] = 16;
+                    empty.1 -= 1;
                 }
             } else if now.1 > empty.1 {
                 // 空きマスがnowより左にあるとき

@@ -66,3 +66,6 @@ DDDLDRUULDRUULDRUULDRUULDDDRDRUULDRUULDRUULDDDRRRDRUULDRUULDRUULDLURDLLURDRDRUUL
 
 05/31 右隅3x3以外をスライド操作で構築できるようになった
 なったと思ったんですが、slide2がバグってそう
+たぶんバグがとれた
+
+TODO: こもりさんのやつの入力からのマンハッタン距離を取ったりする
