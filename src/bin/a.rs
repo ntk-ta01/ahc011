@@ -34,6 +34,7 @@ fn main() {
     let mut now_tiles = vec![vec![0; input.n]; input.n];
     now_tiles[input.n - 1][input.n - 1] = 16;
     let mut next_poses = vec![];
+    let tile_is = get_tile_is(&input);
     let mut count = 0;
     if dfs(
         (0, 0),
@@ -41,6 +42,7 @@ fn main() {
         &mut tile_count,
         &mut now_tiles,
         &mut next_poses,
+        &tile_is,
         &mut count,
     ) {
         eprintln!("count: {}", count);
@@ -54,6 +56,47 @@ fn main() {
     // 見つけた木となるような操作列の構築
     let out = construct(&input, &mut now_tiles);
     println!("{}", out.iter().take(input.t).join(""));
+}
+
+fn get_tile_is(input: &Input) -> Vec<Vec<Vec<usize>>> {
+    let mut tile_is = vec![vec![vec![]; input.n]; input.n];
+    for pi in 0..input.n {
+        for pj in 0..input.n {
+            let mut is = vec![];
+            let mut que = VecDeque::new();
+            let mut visited = vec![vec![false; input.n]; input.n];
+            let mut used_tile_i = vec![false; 16];
+            visited[pi][pj] = true;
+            que.push_back((pi, pj));
+            used_tile_i[0] = true;
+            while !que.is_empty() && used_tile_i.iter().any(|b| !*b) {
+                let v = que.pop_front().unwrap();
+                for (di, dj) in DIJ.iter() {
+                    let ni = v.0 + *di;
+                    let nj = v.1 + *dj;
+                    if input.n <= ni || input.n <= nj {
+                        continue;
+                    }
+                    if visited[ni][nj] {
+                        continue;
+                    }
+                    let tile_i = if input.tiles[ni][nj] != 16 {
+                        input.tiles[ni][nj]
+                    } else {
+                        0
+                    };
+                    if !used_tile_i[tile_i] {
+                        is.push(tile_i);
+                        used_tile_i[tile_i] = true;
+                    }
+                    visited[ni][nj] = true;
+                    que.push_back((ni, nj));
+                }
+            }
+            tile_is[pi][pj] = is;
+        }
+    }
+    tile_is
 }
 
 fn get_now(
@@ -523,6 +566,40 @@ fn slide2(
                 b_now.1 += 1;
             }
         }
+        if empty == tar_b && (tar_b.0 + 1, tar_b.1) == b_now {
+            if tar_a != a_now {
+                // bを1個下にずらす
+                out.push('R');
+                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                tiles[empty.0][empty.1 + 1] = 16;
+                empty.1 += 1;
+                for _ in 0..(b_now.0 - empty.0 + 1) {
+                    out.push('D');
+                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                    tiles[empty.0 + 1][empty.1] = 16;
+                    empty.0 += 1;
+                }
+                out.push('L');
+                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                tiles[empty.0][empty.1 - 1] = 16;
+                empty.1 -= 1;
+                // bの下に空きマスが来た
+                out.push('U');
+                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                tiles[empty.0 - 1][empty.1] = 16;
+                empty.0 -= 1;
+                b_now.0 += 1;
+            } else {
+                // tar_a == a_now
+                // bを1個上にずらしてreturn
+                out.push('U');
+                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                tiles[empty.0 - 1][empty.1] = 16;
+                empty.0 -= 1;
+                b_now.0 += 1;
+                return out;
+            }
+        }
     } else {
         // 下三角を見るとき
         if a_now == tar_a && b_now == (tar_a.0, tar_a.1 + 1) {
@@ -689,6 +766,40 @@ fn slide2(
                 tiles[empty.0 - 1][empty.1] = 16;
                 empty.0 -= 1;
                 b_now.0 += 1;
+            }
+        }
+        if empty == tar_b && (tar_b.0, tar_b.1 + 1) == b_now {
+            if tar_a != a_now {
+                // bを1個右にずらす
+                out.push('D');
+                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                tiles[empty.0 + 1][empty.1] = 16;
+                empty.0 += 1;
+                for _ in 0..(b_now.1 - empty.1 + 1) {
+                    out.push('R');
+                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                    tiles[empty.0][empty.1 + 1] = 16;
+                    empty.1 += 1;
+                }
+                out.push('U');
+                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                tiles[empty.0 - 1][empty.1] = 16;
+                empty.0 -= 1;
+                // bの右に空きマスが来た
+                out.push('L');
+                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                tiles[empty.0][empty.1 - 1] = 16;
+                empty.1 -= 1;
+                b_now.1 += 1;
+            } else {
+                // tar_a == a_now
+                // bを1個左にずらしてreturn
+                out.push('L');
+                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                tiles[empty.0][empty.1 - 1] = 16;
+                empty.1 -= 1;
+                b_now.1 += 1;
+                return out;
             }
         }
     }
@@ -1841,12 +1952,13 @@ fn dfs(
     tile_count: &mut [i32],
     now_tiles: &mut [Vec<usize>],
     next_poses: &mut Vec<(usize, usize)>,
+    tile_is: &[Vec<Vec<usize>>],
     count: &mut usize,
 ) -> bool {
     // アイデア: input.tiles上でBFSする
 
     // 今のposに置くタイルを決める
-    for tile_i in 1..16 {
+    for &tile_i in tile_is[pos.0][pos.1].iter() {
         if tile_count[tile_i] == 0 {
             // このタイルはない
             continue;
@@ -1935,6 +2047,7 @@ fn dfs(
                         tile_count,
                         now_tiles,
                         next_poses,
+                        tile_is,
                         count,
                     ) {
                         return true;
@@ -1954,7 +2067,15 @@ fn dfs(
                         tile_count[tile_i] += 1;
                         continue;
                     }
-                    if dfs((i2, j2), input, tile_count, now_tiles, next_poses, count) {
+                    if dfs(
+                        (i2, j2),
+                        input,
+                        tile_count,
+                        now_tiles,
+                        next_poses,
+                        tile_is,
+                        count,
+                    ) {
                         return true;
                     }
                     now_tiles[pos.0][pos.1] = 0;
@@ -1967,20 +2088,20 @@ fn dfs(
         }
     }
     *count += 1;
-    if *count <= 100 && *count % 10 == 0 {
-        eprintln!("count: {}", count);
-        eprintln!("{:?}", tile_count);
-        for row in now_tiles.iter() {
-            for t in row.iter() {
-                if *t == 16 {
-                    eprint!("{:x}", 0);
-                } else {
-                    eprint!("{:x}", t);
-                }
-            }
-            eprintln!();
-        }
-    }
+    // if *count <= 100 && *count % 10 == 0 {
+    //     eprintln!("count: {}", count);
+    //     eprintln!("{:?}", tile_count);
+    //     for row in now_tiles.iter() {
+    //         for t in row.iter() {
+    //             if *t == 16 {
+    //                 eprint!("{:x}", 0);
+    //             } else {
+    //                 eprint!("{:x}", t);
+    //             }
+    //         }
+    //         eprintln!();
+    //     }
+    // }
     false
 }
 
