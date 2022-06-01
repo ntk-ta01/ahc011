@@ -1743,6 +1743,76 @@ fn slide(
     out
 }
 
+fn is_empty_space(input: &Input, now_tiles: &[Vec<usize>]) -> bool {
+    // 455900
+    // c9c34b
+    // a6380a <- ここの0みたいなのを空きスペースと言った
+    // 698edb
+    // 067300
+    // 000000
+    // こういうのがあったらtrue
+
+    // うわーついでにこういうのも空きスペースと呼びたい
+    // 455900 <- この右上に絶対にいけない
+    // c9c349
+    // a6384b
+    // 698edb
+    // 067300
+    // 000000
+
+    // もっとやばい
+    // 800880
+    // 655ba0
+    // 00c3a0
+    // 00acb0
+    // 006ba0
+    // 000200
+
+    // 0からBFSしてどこか開いているところにつながればOK
+    // つながらなかったらデッドスペースができている
+    // 0からBFSすれば4x4とかも全部見れるのでは？？？
+    let mut que = std::collections::VecDeque::new();
+    let mut visited = vec![vec![false; input.n]; input.n];
+    for si in 0..input.n {
+        for sj in 0..input.n {
+            if now_tiles[si][sj] != 0 {
+                continue;
+            }
+            if visited[si][sj] {
+                continue;
+            }
+            visited[si][sj] = true;
+            que.push_back((si, sj));
+            let mut is_open = false; // 0だけで到達できる連結成分のどこかが開いているかチェック
+            while !que.is_empty() {
+                let v = que.pop_front().unwrap();
+                for (d, (di, dj)) in DIJ.iter().enumerate() {
+                    let ni = v.0 + *di;
+                    let nj = v.1 + *dj;
+                    if input.n <= ni || input.n <= nj {
+                        continue;
+                    }
+                    if visited[ni][nj] {
+                        continue;
+                    }
+                    if now_tiles[ni][nj] == 0 {
+                        visited[ni][nj] = true;
+                        que.push_back((ni, nj));
+                    } else if (now_tiles[ni][nj] >> (d ^ 2)) & 1 == 1 {
+                        // 開いているかチェック
+                        is_open = true;
+                    }
+                }
+            }
+            if !is_open {
+                return true;
+            }
+        }
+    }
+
+    false
+}
+
 fn dfs(
     pos: (usize, usize),
     input: &Input,
@@ -1759,6 +1829,9 @@ fn dfs(
             // このタイルはない
             continue;
         }
+        let mut open_count = 0;
+        let mut can_empty_space = false;
+        let mut can_empty_space2 = false;
         let mut is_place = true;
         let mut dij = vec![];
         for (d, (di, dj)) in DIJ.iter().enumerate() {
@@ -1772,6 +1845,7 @@ fn dfs(
                 {
                     // 空きマスか、今置くタイルと繋がっているか
                     if now_tiles[i2][j2] == 0 {
+                        open_count += 1;
                         dij.push((i2, j2));
                     }
                 } else {
@@ -1786,6 +1860,33 @@ fn dfs(
                     is_place = false;
                     break;
                 }
+                // 今置くタイルが開いていない方向の別のタイルが、置いてあって（!=0）、開いていないなら
+                // 空きスペースを作った可能性がある
+                // 455900
+                // c9c34b
+                // a6380a <- ここの0みたいなのを空きスペースと言った
+                // 698edb
+                // 067300
+                // 000000
+                // 空きスペースチェックを走らせて、空きスペースが本当にあったらfalseを返したい
+                if i2 < input.n
+                    && j2 < input.n
+                    && now_tiles[i2][j2] != 0
+                    && (now_tiles[i2][j2] >> (d ^ 2)) & 1 == 0
+                {
+                    can_empty_space = true;
+                }
+                // こういう空きスペースも検知したい
+                // 800880
+                // 655ba0
+                // 00c3a0
+                // 00acb0
+                // 006ba0
+                // 000200
+                // 壁に接するところに置いたときで、どこにも開いてなければ走らせるとよさげ？
+                if i2 >= input.n || j2 >= input.n {
+                    can_empty_space2 = true;
+                }
             }
         }
         if is_place {
@@ -1794,6 +1895,13 @@ fn dfs(
                 tile_count[tile_i] -= 1;
                 if tile_count.iter().skip(1).sum::<i32>() == 0 {
                     return true;
+                }
+                if (can_empty_space || open_count == 0 && can_empty_space2)
+                    && is_empty_space(input, now_tiles)
+                {
+                    now_tiles[pos.0][pos.1] = 0;
+                    tile_count[tile_i] += 1;
+                    return false;
                 }
                 for ni in (0..next_poses.len()).rev() {
                     if now_tiles[next_poses[ni].0][next_poses[ni].1] != 0 {
@@ -1817,6 +1925,16 @@ fn dfs(
                 for &(i2, j2) in dij.iter() {
                     now_tiles[pos.0][pos.1] = tile_i;
                     tile_count[tile_i] -= 1;
+                    if (can_empty_space || open_count == 0 && can_empty_space2)
+                        && is_empty_space(input, now_tiles)
+                    {
+                        now_tiles[pos.0][pos.1] = 0;
+                        tile_count[tile_i] += 1;
+                        for _ in 0..dij.len() {
+                            next_poses.pop();
+                        }
+                        return false;
+                    }
                     if dfs((i2, j2), input, tile_count, now_tiles, next_poses, count) {
                         return true;
                     }
@@ -1832,9 +1950,14 @@ fn dfs(
     *count += 1;
     if *count <= 100 && *count % 10 == 0 {
         eprintln!("count: {}", count);
+        eprintln!("{:?}", tile_count);
         for row in now_tiles.iter() {
             for t in row.iter() {
-                eprint!("{:2} ", t);
+                if *t == 16 {
+                    eprint!("{:x}", 0);
+                } else {
+                    eprint!("{:x}", t);
+                }
             }
             eprintln!();
         }
