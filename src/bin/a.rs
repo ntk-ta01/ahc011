@@ -50,7 +50,7 @@ fn main() {
     }
     // 見つけた木となるような操作列の構築
     let out = construct(&input, &mut now_tiles);
-    println!("{}", out.iter().join(""));
+    println!("{}", out.iter().take(input.t).join(""));
 }
 
 fn get_now(
