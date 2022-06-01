@@ -7,7 +7,7 @@
 use itertools::Itertools;
 use permutohedron::LexicalPermutation;
 use proconio::{input, marker::Chars};
-use std::{collections::HashMap, vec};
+use std::collections::{HashMap, VecDeque};
 
 pub type Output = Vec<char>;
 
@@ -57,7 +57,6 @@ fn main() {
 }
 
 fn get_now(
-    start: usize,
     tar: (usize, usize),
     fix: &[Vec<bool>],
     input: &Input,
@@ -66,16 +65,39 @@ fn get_now(
 ) -> (usize, usize) {
     // TODO: ここをbfsにする
     // fix[i][j] or visited[i][j]とかにすればできるだろ
-    for i in start..input.n {
-        for j in start..input.n {
-            if fix[i][j] {
+
+    let mut que = VecDeque::new();
+    let mut visited = vec![vec![false; input.n]; input.n];
+    visited[tar.0][tar.1] = true;
+    que.push_back(tar);
+    while !que.is_empty() {
+        let v = que.pop_front().unwrap();
+        if !fix[v.0][v.1] && tree_tiles[tar.0][tar.1] == tiles[v.0][v.1] {
+            return v;
+        }
+        for (di, dj) in DIJ.iter() {
+            let ni = v.0 + *di;
+            let nj = v.1 + *dj;
+            if input.n <= ni || input.n <= nj {
                 continue;
             }
-            if tree_tiles[tar.0][tar.1] == tiles[i][j] {
-                return (i, j);
+            if fix[ni][nj] || visited[ni][nj] {
+                continue;
             }
+            visited[ni][nj] = true;
+            que.push_back((ni, nj));
         }
     }
+    // for i in start..input.n {
+    //     for j in start..input.n {
+    //         if fix[i][j] {
+    //             continue;
+    //         }
+    //         if tree_tiles[tar.0][tar.1] == tiles[i][j] {
+    //             return (i, j);
+    //         }
+    //     }
+    // }
     unreachable!("not found: now:(");
 }
 
@@ -100,7 +122,7 @@ fn construct(input: &Input, tree_tiles: &mut [Vec<usize>]) -> Output {
         for j in i..input.n {
             // tiles[i][j]をtree_tiles[i][j]にする
             if i < input.n - 2 && j < input.n - 2 {
-                let now = get_now(i, (i, j), &fix, input, &tiles, tree_tiles);
+                let now = get_now((i, j), &fix, input, &tiles, tree_tiles);
                 let out_i = slide((i, j), now, input, &mut tiles);
                 fix[i][j] = true;
                 for oi in out_i {
@@ -122,7 +144,7 @@ fn construct(input: &Input, tree_tiles: &mut [Vec<usize>]) -> Output {
         for i2 in i + 1..input.n {
             // tiles[i2][i]
             if i2 < input.n - 2 && i < input.n - 2 {
-                let now = get_now(i, (i2, i), &fix, input, &tiles, tree_tiles);
+                let now = get_now((i2, i), &fix, input, &tiles, tree_tiles);
                 let out_i = slide((i2, i), now, input, &mut tiles);
                 fix[i2][i] = true;
                 for oi in out_i {
@@ -304,8 +326,8 @@ fn slide2(
 ) -> Vec<char> {
     let mut out: Output = vec![];
     let start = tar_b.0.min(tar_b.1);
-    let a_now = get_now(start, tar_a, fix, input, tiles, tree_tiles);
-    let mut b_now = get_now(start, tar_b, fix, input, tiles, tree_tiles);
+    let a_now = get_now(tar_a, fix, input, tiles, tree_tiles);
+    let mut b_now = get_now(tar_b, fix, input, tiles, tree_tiles);
     if a_now == tar_a && b_now == tar_b {
         return out;
     }
@@ -670,13 +692,13 @@ fn slide2(
             }
         }
     }
-    let a_now = get_now(start, tar_a, fix, input, tiles, tree_tiles);
+    let a_now = get_now(tar_a, fix, input, tiles, tree_tiles);
     let out1 = slide(tar_b, a_now, input, tiles);
     for oi in out1 {
         out.push(oi);
     }
     fix[tar_b.0][tar_b.1] = true;
-    let b_now = get_now(start, tar_b, fix, input, tiles, tree_tiles);
+    let b_now = get_now(tar_b, fix, input, tiles, tree_tiles);
     fix[tar_b.0][tar_b.1] = false;
     let out2 = slide(tar_b, b_now, input, tiles);
     for oi in out2 {
@@ -1771,7 +1793,7 @@ fn is_empty_space(input: &Input, now_tiles: &[Vec<usize>]) -> bool {
     // 0からBFSしてどこか開いているところにつながればOK
     // つながらなかったらデッドスペースができている
     // 0からBFSすれば4x4とかも全部見れるのでは？？？
-    let mut que = std::collections::VecDeque::new();
+    let mut que = VecDeque::new();
     let mut visited = vec![vec![false; input.n]; input.n];
     for si in 0..input.n {
         for sj in 0..input.n {
