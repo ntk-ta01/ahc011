@@ -117,3 +117,7 @@ is_empty_spaceがめっちゃ仕事してるっぽい
 returnじゃなくてcontinueだ
 
 N=6 seed=0でcount: 30148790
+
+DFSの次の手をマンハッタン距離で短い奴にするやつ4,50秒かかる
+
+count: 98324885
