@@ -389,7 +389,39 @@ fn slide2(
     }();
     if tar_a.0 <= tar_a.1 {
         // 上三角を見るとき
-        if a_now == tar_a && b_now == (tar_a.0 + 1, tar_a.1) {
+        if tiles[tar_b.0][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
+            && b_now == (tar_a.0 + 1, tar_a.1)
+        {
+            if empty == tar_a {
+                // bを1個下に下げる
+                out.push('L');
+                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                tiles[empty.0][empty.1 - 1] = 16;
+                empty.1 -= 1;
+                for _ in 0..(b_now.0 + 1 - empty.0) {
+                    out.push('D');
+                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                    tiles[empty.0 + 1][empty.1] = 16;
+                    empty.0 += 1;
+                }
+                for _ in 0..(b_now.1 - empty.1) {
+                    out.push('R');
+                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                    tiles[empty.0][empty.1 + 1] = 16;
+                    empty.1 += 1;
+                }
+                // 空きマスがbの1個下に来た
+                // bを1個下に下げる
+                out.push('U');
+                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                tiles[empty.0 - 1][empty.1] = 16;
+                empty.0 -= 1;
+                b_now.0 += 1;
+            }
+            // else {
+            // 他のif文に入らないようにする
+            // }
+        } else if a_now == tar_a && b_now == (tar_a.0 + 1, tar_a.1) {
             // ea
             // .b
             // e = empty
@@ -592,17 +624,49 @@ fn slide2(
             } else {
                 // tar_a == a_now
                 // bを1個上にずらしてreturn
-                out.push('U');
-                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                tiles[empty.0 - 1][empty.1] = 16;
-                empty.0 -= 1;
-                b_now.0 += 1;
+                out.push('D');
+                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                tiles[empty.0 + 1][empty.1] = 16;
+                empty.0 += 1;
+                b_now.0 -= 1;
                 return out;
             }
         }
     } else {
         // 下三角を見るとき
-        if a_now == tar_a && b_now == (tar_a.0, tar_a.1 + 1) {
+        if tiles[tar_b.0][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
+            && b_now == (tar_a.0 + 1, tar_a.1)
+        {
+            if empty == tar_a {
+                // bを1個右にずらす
+                out.push('U');
+                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                tiles[empty.0 - 1][empty.1] = 16;
+                empty.0 -= 1;
+                for _ in 0..(b_now.1 + 1 - empty.1) {
+                    out.push('R');
+                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                    tiles[empty.0][empty.1 + 1] = 16;
+                    empty.1 += 1;
+                }
+                for _ in 0..(b_now.0 - empty.0) {
+                    out.push('D');
+                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                    tiles[empty.0 + 1][empty.1] = 16;
+                    empty.0 += 1;
+                }
+                // 空きマスがbの1個右に来た
+                // bを1個右にずらす
+                out.push('L');
+                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                tiles[empty.0][empty.1 - 1] = 16;
+                empty.1 -= 1;
+                b_now.1 += 1;
+            }
+            // else {
+            // 他のif文に入らないようにする
+            // }
+        } else if a_now == tar_a && b_now == (tar_a.0, tar_a.1 + 1) {
             // bを1個右にずらす
             // 列を合わせてから行を合わせる
             if b_now.1 >= empty.1 {
@@ -794,11 +858,11 @@ fn slide2(
             } else {
                 // tar_a == a_now
                 // bを1個左にずらしてreturn
-                out.push('L');
-                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                tiles[empty.0][empty.1 - 1] = 16;
-                empty.1 -= 1;
-                b_now.1 += 1;
+                out.push('R');
+                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                tiles[empty.0][empty.1 + 1] = 16;
+                empty.1 += 1;
+                b_now.1 -= 1;
                 return out;
             }
         }
@@ -928,6 +992,8 @@ fn slide(
                     tiles[empty.0][empty.1 + 1] = 16;
                     empty.1 += 1;
                 } else {
+                    // TODO:now.0 < empty.0だとこの後損する
+                    // now.1 - empty.1 - 1までRしてその後UUR
                     for _ in 0..(now.1 - empty.1) {
                         out.push('R');
                         tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
@@ -1440,6 +1506,8 @@ fn slide(
                     tiles[empty.0 + 1][empty.1] = 16;
                     empty.0 += 1;
                 } else {
+                    // TODO:now.1 < empty.1だとこの後損する
+                    // now.0 - empty.0 - 1までDしてその後LLD
                     for _ in 0..(now.0 - empty.0) {
                         out.push('D');
                         tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
@@ -1476,6 +1544,9 @@ fn slide(
                     empty.0 -= 1;
                 } else {
                     out.push('U');
+                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                    tiles[empty.0 - 1][empty.1] = 16;
+                    empty.0 -= 1;
                     out.push('L');
                     tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
                     tiles[empty.0][empty.1 - 1] = 16;
