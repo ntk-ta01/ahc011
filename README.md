@@ -147,4 +147,36 @@ UULURDRRDLLURULDRURRRDLLURDLLURDDDRULDRUULDRUULDLDRRULDRRUULDDDRUULDRUULDLLDLLUR
 N=5 seed=12でバグった 明日直す
 最初はout.push('U')の後に、実際のtile入れ替え処理入れ忘れてた
 bを左に動かすときにout.push('L')してた 'R'が正しい
-slide3x3で経路復元するときにno entry found for key　これは大体slide2が悪い　帰ってきたら直す
+slide3x3で経路復元するときにno entry found for key　これは大体slide2が悪い
+
+気づきました
+slide2の前処理でbを1個上げたりしたときに、逆にbが1個上がることがあってまずい
+slide2をがっつり書き換えた方がいいかも
+```
+----ea
+.....b <-ここのbを下げようとして
+....b. <-ここのbは上がってしまう
+```
+
+即BAにできる場合を覗いて、Bをいったん排除しきりたい
+排除する場所はtar_b.0 + 1,tar_b.1 - 1に近い場所
+```
+----ea
+|....b
+|...b.
+```
+を
+```
+----ea
+|.bb..
+|.....
+```
+こんな感じにしたい
+
+bの移動先はfixしてなくて、危険な場所(eaとその下2個のところ)じゃないとこを
+```rust
+for i in 0..n {
+    for j in (0..n).rev() {}
+}
+```
+の順で探せばよいかな
