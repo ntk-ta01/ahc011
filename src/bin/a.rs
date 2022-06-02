@@ -558,6 +558,7 @@ fn slide2(
             tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
             tiles[empty.0 + 1][empty.1] = 16;
             empty.0 += 1;
+            return out;
         }
     } else {
         // 下三角を見る
@@ -728,6 +729,7 @@ fn slide2(
             tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
             tiles[empty.0][empty.1 + 1] = 16;
             empty.1 += 1;
+            return out;
         }
     }
     // bがあるかチェック
