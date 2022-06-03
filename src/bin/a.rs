@@ -396,391 +396,259 @@ fn slide2(
     if a_now == tar_a && b_now == tar_b {
         return out;
     }
-    if tar_a.0 <= tar_a.1 {
-        // 上三角を見る
-        if b_now == tar_b && empty == tar_a && a_now == (tar_a.0 + 1, tar_a.1) {
-            // 空きマスを1つ下げればOK
-            out.push('D');
-            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-            tiles[empty.0 + 1][empty.1] = 16;
-            empty.0 += 1;
-            return out;
-        }
-        if a_now == tar_a && empty == tar_b && b_now == (tar_b.0 + 1, tar_b.1) {
-            // 空きマスを1つ下げればOK
-            out.push('D');
-            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-            tiles[empty.0 + 1][empty.1] = 16;
-            empty.0 += 1;
-            return out;
-        }
-        if tiles[tar_b.0][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
-            && tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_b.0][tar_b.1]
-        {
-            // a.
-            // b.
-            // 一回回す
-            // a_nowとb_nowは想定と違う可能性があるためセットする
-            a_now = tar_b;
-            b_now = (tar_b.0 + 1, tar_b.1);
-            // 空きマスを持ってくる
-            // b_now.0 + 1の行に持ってくる
-            if empty.0 <= b_now.0 + 1 {
-                for _ in 0..(b_now.0 + 1 - empty.0) {
-                    out.push('D');
-                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                    tiles[empty.0 + 1][empty.1] = 16;
-                    empty.0 += 1;
-                }
-            } else {
-                for _ in 0..(empty.0 - b_now.0 - 1) {
-                    out.push('U');
-                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                    tiles[empty.0 - 1][empty.1] = 16;
-                    empty.0 -= 1;
-                }
-            }
-            // 一番右の列に持って行く
-            for _ in 0..(input.n - 1 - empty.1) {
-                out.push('R');
-                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                tiles[empty.0][empty.1 + 1] = 16;
-                empty.1 += 1;
-            }
-            // aの隣に持って行く
-            for _ in 0..(empty.0 - a_now.0) {
-                out.push('U');
-                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                tiles[empty.0 - 1][empty.1] = 16;
-                empty.0 -= 1;
-            }
-            // 1回回す
-            out.push('L');
-            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-            tiles[empty.0][empty.1 - 1] = 16;
-            empty.1 -= 1;
-            out.push('D');
-            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-            tiles[empty.0 + 1][empty.1] = 16;
-            empty.0 += 1;
-            return out;
-        }
-        if tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
-            && tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
-        {
-            // ..
-            // ab
-            // a_nowとb_nowは想定と違う可能性があるためセットする
-            a_now = (tar_b.0 + 1, tar_b.1);
-            // b_now = (tar_b.0 + 1, tar_b.1 + 1);
-            // 空きマスの位置によってさらに場合分け
-            if empty.0 < a_now.0 {
-                // 2回回す
-                if empty.1 == input.n - 1 {
-                    out.push('L');
-                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                    tiles[empty.0][empty.1 - 1] = 16;
-                    empty.1 -= 1;
-                }
-                out.push('D');
-                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                tiles[empty.0 + 1][empty.1] = 16;
-                empty.0 += 1;
-                out.push('R');
-                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                tiles[empty.0][empty.1 + 1] = 16;
-                empty.1 += 1;
-                out.push('U');
-                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                tiles[empty.0 - 1][empty.1] = 16;
-                empty.0 -= 1;
-                out.push('L');
-                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                tiles[empty.0][empty.1 - 1] = 16;
-                empty.1 -= 1;
+    if tree_tiles[tar_a.0][tar_a.1] != tree_tiles[tar_b.0][tar_b.1] {
+        if tar_a.0 <= tar_a.1 {
+            // 上三角を見る
+            if b_now == tar_b && empty == tar_a && a_now == (tar_a.0 + 1, tar_a.1) {
+                // 空きマスを1つ下げればOK
                 out.push('D');
                 tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
                 tiles[empty.0 + 1][empty.1] = 16;
                 empty.0 += 1;
                 return out;
-            } else {
-                // aをtar_bにスライドさせて、その後bをtar_bにスライドさせると揃う
-                // 注意 a_nowを再計算しないようにする b_nowは？
-                // aを動かさない場所にあるはず？だから再計算しても良さそう
-                // tar_aにあるbを触りたくないのでfixしておく
-                let out1 = slide(tar_b, a_now, input, tiles);
-                for oi in out1 {
-                    out.push(oi);
-                }
-                fix[tar_b.0][tar_b.1] = true;
-                fix[tar_a.0][tar_a.1] = true;
-                let b_now = get_now(tar_b, fix, input, tiles, tree_tiles);
-                fix[tar_b.0][tar_b.1] = false;
-                fix[tar_a.0][tar_a.1] = false;
-                let out2 = slide(tar_b, b_now, input, tiles);
-                for oi in out2 {
-                    out.push(oi);
-                }
+            }
+            if a_now == tar_a && empty == tar_b && b_now == (tar_b.0 + 1, tar_b.1) {
+                // 空きマスを1つ下げればOK
+                out.push('D');
+                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                tiles[empty.0 + 1][empty.1] = 16;
+                empty.0 += 1;
                 return out;
             }
-        }
-        if tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
-            && tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
-        {
-            // .b
-            // .a
-            // a_nowとb_nowは想定と違う可能性があるためセットする
-            // a_now = (tar_b.0 + 1, tar_b.1 + 1);
-            b_now = (tar_b.0, tar_b.1 + 1);
-            // 1回回す ただし上のパターンまでで回していたのと逆回り
-            // まずinput.n - 2の列に持って行く
-            if empty.1 < input.n - 2 {
-                for _ in 0..(input.n - 2 - empty.1) {
+            if tiles[tar_b.0][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
+                && tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_b.0][tar_b.1]
+            {
+                // a.
+                // b.
+                // 一回回す
+                // a_nowとb_nowは想定と違う可能性があるためセットする
+                a_now = tar_b;
+                b_now = (tar_b.0 + 1, tar_b.1);
+                // 空きマスを持ってくる
+                // b_now.0 + 1の行に持ってくる
+                if empty.0 <= b_now.0 + 1 {
+                    for _ in 0..(b_now.0 + 1 - empty.0) {
+                        out.push('D');
+                        tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                        tiles[empty.0 + 1][empty.1] = 16;
+                        empty.0 += 1;
+                    }
+                } else {
+                    for _ in 0..(empty.0 - b_now.0 - 1) {
+                        out.push('U');
+                        tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                        tiles[empty.0 - 1][empty.1] = 16;
+                        empty.0 -= 1;
+                    }
+                }
+                // 一番右の列に持って行く
+                for _ in 0..(input.n - 1 - empty.1) {
                     out.push('R');
                     tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
                     tiles[empty.0][empty.1 + 1] = 16;
                     empty.1 += 1;
                 }
-            } else {
-                for _ in 0..(empty.1 - input.n + 2) {
-                    out.push('L');
-                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                    tiles[empty.0][empty.1 - 1] = 16;
-                    empty.1 -= 1;
-                }
-            }
-            // bの隣に持って行く
-            for _ in 0..(empty.0 - b_now.0) {
-                out.push('U');
-                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                tiles[empty.0 - 1][empty.1] = 16;
-                empty.0 -= 1;
-            }
-            // 回す
-            out.push('R');
-            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-            tiles[empty.0][empty.1 + 1] = 16;
-            empty.1 += 1;
-            out.push('D');
-            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-            tiles[empty.0 + 1][empty.1] = 16;
-            empty.0 += 1;
-            return out;
-        }
-    } else {
-        // 下三角を見る
-        if b_now == tar_b && empty == tar_a && a_now == (tar_a.0, tar_a.1 + 1) {
-            // 空きマスを右にずらせばOK
-            out.push('R');
-            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-            tiles[empty.0][empty.1 + 1] = 16;
-            empty.1 += 1;
-            return out;
-        }
-        if a_now == tar_a && empty == tar_b && b_now == (tar_b.0, tar_b.1 + 1) {
-            // 空きマスを1つ下げればOK
-            out.push('R');
-            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-            tiles[empty.0][empty.1 + 1] = 16;
-            empty.1 += 1;
-            return out;
-        }
-        if tiles[tar_b.0][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
-            && tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
-        {
-            // ab
-            // ..
-            // 一回回す
-            // a_nowとb_nowは想定と違う可能性があるためセットする
-            a_now = tar_b;
-            b_now = (tar_b.0, tar_b.1 + 1);
-            // 空きマスを持ってくる
-            // b_now.1 + 1の列に持ってくる
-            if empty.1 <= b_now.1 + 1 {
-                for _ in 0..(b_now.1 + 1 - empty.1) {
-                    out.push('R');
-                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                    tiles[empty.0][empty.1 + 1] = 16;
-                    empty.1 += 1;
-                }
-            } else {
-                for _ in 0..(empty.1 - b_now.1 - 1) {
-                    out.push('L');
-                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                    tiles[empty.0][empty.1 - 1] = 16;
-                    empty.1 -= 1;
-                }
-            }
-            // 一番下の行に持って行く
-            for _ in 0..(input.n - 1 - empty.0) {
-                out.push('D');
-                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                tiles[empty.0 + 1][empty.1] = 16;
-                empty.0 += 1;
-            }
-            // aの隣に持って行く
-            for _ in 0..(empty.1 - a_now.1) {
-                out.push('L');
-                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                tiles[empty.0][empty.1 - 1] = 16;
-                empty.1 -= 1;
-            }
-            // 1回回す
-            out.push('U');
-            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-            tiles[empty.0 - 1][empty.1] = 16;
-            empty.0 -= 1;
-            out.push('R');
-            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-            tiles[empty.0][empty.1 + 1] = 16;
-            empty.1 += 1;
-            return out;
-        }
-        if tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
-            && tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
-        {
-            // .a
-            // .b
-            // a_nowとb_nowは想定と違う可能性があるためセットする
-            a_now = (tar_b.0, tar_b.1 + 1);
-            // b_now = (tar_b.0 + 1, tar_b.1 + 1);
-            // 空きマスの位置によってさらに場合分け
-            if empty.1 < a_now.1 {
-                // 2回回す
-                if empty.0 == input.n - 1 {
+                // aの隣に持って行く
+                for _ in 0..(empty.0 - a_now.0) {
                     out.push('U');
                     tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
                     tiles[empty.0 - 1][empty.1] = 16;
                     empty.0 -= 1;
                 }
-                out.push('R');
-                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                tiles[empty.0][empty.1 + 1] = 16;
-                empty.1 += 1;
+                // 1回回す
+                out.push('L');
+                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                tiles[empty.0][empty.1 - 1] = 16;
+                empty.1 -= 1;
                 out.push('D');
                 tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
                 tiles[empty.0 + 1][empty.1] = 16;
                 empty.0 += 1;
-                out.push('L');
-                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                tiles[empty.0][empty.1 - 1] = 16;
-                empty.1 -= 1;
-                out.push('U');
-                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                tiles[empty.0 - 1][empty.1] = 16;
-                empty.0 -= 1;
-                out.push('R');
-                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                tiles[empty.0][empty.1 + 1] = 16;
-                empty.1 += 1;
-                return out;
-            } else {
-                // aをtar_bにスライドさせて、その後bをtar_bにスライドさせると揃う
-                // 注意 a_nowを再計算しないようにする b_nowは？
-                // aを動かさない場所にあるはず？だから再計算しても良さそう
-                // tar_aにあるbを触りたくないのでfixしておく
-                let out1 = slide(tar_b, a_now, input, tiles);
-                for oi in out1 {
-                    out.push(oi);
-                }
-                fix[tar_b.0][tar_b.1] = true;
-                fix[tar_a.0][tar_a.1] = true;
-                let b_now = get_now(tar_b, fix, input, tiles, tree_tiles);
-                fix[tar_b.0][tar_b.1] = false;
-                fix[tar_a.0][tar_a.1] = false;
-                let out2 = slide(tar_b, b_now, input, tiles);
-                for oi in out2 {
-                    out.push(oi);
-                }
                 return out;
             }
-        }
-        if tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
-            && tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_b.0][tar_b.1]
-        {
-            // ..
-            // ba
-            // a_nowとb_nowは想定と違う可能性があるためセットする
-            // a_now = (tar_b.0 + 1, tar_b.1 + 1);
-            b_now = (tar_b.0 + 1, tar_b.1);
-            // 1回回す ただし上のパターンまでで回していたのと逆回り
-            // まずinput.n - 2の行に持って行く
-            if empty.0 < input.n - 2 {
-                for _ in 0..(input.n - 2 - empty.0) {
-                    out.push('D');
-                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                    tiles[empty.0 + 1][empty.1] = 16;
-                    empty.0 += 1;
-                }
-            } else {
-                for _ in 0..(empty.0 - input.n + 2) {
-                    out.push('U');
-                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                    tiles[empty.0 - 1][empty.1] = 16;
-                    empty.0 -= 1;
-                }
-            }
-            // bの隣に持って行く
-            for _ in 0..(empty.1 - b_now.1) {
-                out.push('L');
-                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                tiles[empty.0][empty.1 - 1] = 16;
-                empty.1 -= 1;
-            }
-            // 回す
-            out.push('D');
-            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-            tiles[empty.0 + 1][empty.1] = 16;
-            empty.0 += 1;
-            out.push('R');
-            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-            tiles[empty.0][empty.1 + 1] = 16;
-            empty.1 += 1;
-            return out;
-        }
-    }
-    // bがあるかチェック
-    if tiles[tar_b.0][tar_b.1] == tree_tiles[tar_b.0][tar_b.1]
-        || tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_b.0][tar_b.1]
-        || tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
-        || tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
-    {
-        // aもあるかチェック
-        if tiles[tar_b.0][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
-            || tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
-            || tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
-            || tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
-        {
-            // aがある
-            if tar_a.0 <= tar_a.1 {
-                // 上三角の場合
-
-                if tiles[tar_b.0][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
-                    && tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
-                    && empty != (tar_b.0, tar_b.1 + 1)
-                {
-                    // ax <- xがemptyでない
-                    // .b
-                    // とき
-                    // a.
-                    // b. にして回す 必勝パターン
-                    // まず空きマスをinput.n - 2の列に持ってくる
+            if tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
+                && tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
+            {
+                // ..
+                // ab
+                // a_nowとb_nowは想定と違う可能性があるためセットする
+                a_now = (tar_b.0 + 1, tar_b.1);
+                // b_now = (tar_b.0 + 1, tar_b.1 + 1);
+                // 空きマスの位置によってさらに場合分け
+                if empty.0 < a_now.0 {
+                    // 2回回す
                     if empty.1 == input.n - 1 {
                         out.push('L');
                         tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
                         tiles[empty.0][empty.1 - 1] = 16;
                         empty.1 -= 1;
-                    } else {
-                        // input.n - 2 >= empty.1
-                        for _ in 0..(input.n - 2 - empty.1) {
-                            out.push('R');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                            tiles[empty.0][empty.1 + 1] = 16;
-                            empty.1 += 1;
-                        }
                     }
-                    // tar_b.0 + 1の行まで持ってくる
-                    for _ in 0..(tar_b.0 + 1 - empty.0) {
+                    out.push('D');
+                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                    tiles[empty.0 + 1][empty.1] = 16;
+                    empty.0 += 1;
+                    out.push('R');
+                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                    tiles[empty.0][empty.1 + 1] = 16;
+                    empty.1 += 1;
+                    out.push('U');
+                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                    tiles[empty.0 - 1][empty.1] = 16;
+                    empty.0 -= 1;
+                    out.push('L');
+                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                    tiles[empty.0][empty.1 - 1] = 16;
+                    empty.1 -= 1;
+                    out.push('D');
+                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                    tiles[empty.0 + 1][empty.1] = 16;
+                    empty.0 += 1;
+                    return out;
+                } else {
+                    // aをtar_bにスライドさせて、その後bをtar_bにスライドさせると揃う
+                    // 注意 a_nowを再計算しないようにする b_nowは？
+                    // aを動かさない場所にあるはず？だから再計算しても良さそう
+                    // tar_aにあるbを触りたくないのでfixしておく
+                    let out1 = slide(tar_b, a_now, input, tiles);
+                    for oi in out1 {
+                        out.push(oi);
+                    }
+                    fix[tar_b.0][tar_b.1] = true;
+                    fix[tar_a.0][tar_a.1] = true;
+                    let b_now = get_now(tar_b, fix, input, tiles, tree_tiles);
+                    fix[tar_b.0][tar_b.1] = false;
+                    fix[tar_a.0][tar_a.1] = false;
+                    let out2 = slide(tar_b, b_now, input, tiles);
+                    for oi in out2 {
+                        out.push(oi);
+                    }
+                    return out;
+                }
+            }
+            if tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
+                && tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
+            {
+                // .b
+                // .a
+                // a_nowとb_nowは想定と違う可能性があるためセットする
+                // a_now = (tar_b.0 + 1, tar_b.1 + 1);
+                b_now = (tar_b.0, tar_b.1 + 1);
+                // 1回回す ただし上のパターンまでで回していたのと逆回り
+                // まずinput.n - 2の列に持って行く
+                if empty.1 < input.n - 2 {
+                    for _ in 0..(input.n - 2 - empty.1) {
+                        out.push('R');
+                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                        tiles[empty.0][empty.1 + 1] = 16;
+                        empty.1 += 1;
+                    }
+                } else {
+                    for _ in 0..(empty.1 - input.n + 2) {
+                        out.push('L');
+                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                        tiles[empty.0][empty.1 - 1] = 16;
+                        empty.1 -= 1;
+                    }
+                }
+                // bの隣に持って行く
+                for _ in 0..(empty.0 - b_now.0) {
+                    out.push('U');
+                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                    tiles[empty.0 - 1][empty.1] = 16;
+                    empty.0 -= 1;
+                }
+                // 回す
+                out.push('R');
+                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                tiles[empty.0][empty.1 + 1] = 16;
+                empty.1 += 1;
+                out.push('D');
+                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                tiles[empty.0 + 1][empty.1] = 16;
+                empty.0 += 1;
+                return out;
+            }
+        } else {
+            // 下三角を見る
+            if b_now == tar_b && empty == tar_a && a_now == (tar_a.0, tar_a.1 + 1) {
+                // 空きマスを右にずらせばOK
+                out.push('R');
+                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                tiles[empty.0][empty.1 + 1] = 16;
+                empty.1 += 1;
+                return out;
+            }
+            if a_now == tar_a && empty == tar_b && b_now == (tar_b.0, tar_b.1 + 1) {
+                // 空きマスを1つ下げればOK
+                out.push('R');
+                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                tiles[empty.0][empty.1 + 1] = 16;
+                empty.1 += 1;
+                return out;
+            }
+            if tiles[tar_b.0][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
+                && tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
+            {
+                // ab
+                // ..
+                // 一回回す
+                // a_nowとb_nowは想定と違う可能性があるためセットする
+                a_now = tar_b;
+                b_now = (tar_b.0, tar_b.1 + 1);
+                // 空きマスを持ってくる
+                // b_now.1 + 1の列に持ってくる
+                if empty.1 <= b_now.1 + 1 {
+                    for _ in 0..(b_now.1 + 1 - empty.1) {
+                        out.push('R');
+                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                        tiles[empty.0][empty.1 + 1] = 16;
+                        empty.1 += 1;
+                    }
+                } else {
+                    for _ in 0..(empty.1 - b_now.1 - 1) {
+                        out.push('L');
+                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                        tiles[empty.0][empty.1 - 1] = 16;
+                        empty.1 -= 1;
+                    }
+                }
+                // 一番下の行に持って行く
+                for _ in 0..(input.n - 1 - empty.0) {
+                    out.push('D');
+                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                    tiles[empty.0 + 1][empty.1] = 16;
+                    empty.0 += 1;
+                }
+                // aの隣に持って行く
+                for _ in 0..(empty.1 - a_now.1) {
+                    out.push('L');
+                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                    tiles[empty.0][empty.1 - 1] = 16;
+                    empty.1 -= 1;
+                }
+                // 1回回す
+                out.push('U');
+                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                tiles[empty.0 - 1][empty.1] = 16;
+                empty.0 -= 1;
+                out.push('R');
+                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                tiles[empty.0][empty.1 + 1] = 16;
+                empty.1 += 1;
+                return out;
+            }
+            if tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
+                && tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
+            {
+                // .a
+                // .b
+                // a_nowとb_nowは想定と違う可能性があるためセットする
+                a_now = (tar_b.0, tar_b.1 + 1);
+                // b_now = (tar_b.0 + 1, tar_b.1 + 1);
+                // 空きマスの位置によってさらに場合分け
+                if empty.1 < a_now.1 {
+                    // 2回回す
+                    if empty.0 == input.n - 1 {
                         out.push('U');
                         tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
                         tiles[empty.0 - 1][empty.1] = 16;
@@ -790,72 +658,14 @@ fn slide2(
                     tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
                     tiles[empty.0][empty.1 + 1] = 16;
                     empty.1 += 1;
-                    // a.
-                    // be
-                    // になった回す
-                    out.push('U');
-                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                    tiles[empty.0 - 1][empty.1] = 16;
-                    empty.0 -= 1;
-                    out.push('L');
-                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                    tiles[empty.0][empty.1 - 1] = 16;
-                    empty.1 -= 1;
                     out.push('D');
                     tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
                     tiles[empty.0 + 1][empty.1] = 16;
                     empty.0 += 1;
-                    return out;
-                }
-
-                if tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
-                    && tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
-                    && empty != tar_b
-                {
-                    // xb <- xがemptyでない
-                    // a.
-                    // とき
-                    // .b
-                    // .a にして回す 必勝パターン
-                    // 空きマスがaの右隣に持って行きたい
-                    if empty != (tar_b.0 + 1, tar_b.1 + 1) {
-                        // まずは行をtar_b.0 + 2にする
-                        if tar_b.0 + 2 > empty.0 {
-                            for _ in 0..(tar_b.0 + 2 - empty.0) {
-                                out.push('D');
-                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                                tiles[empty.0 + 1][empty.1] = 16;
-                                empty.0 += 1;
-                            }
-                        } else {
-                            for _ in 0..(empty.0 - tar_b.0 - 2) {
-                                out.push('U');
-                                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                                tiles[empty.0 - 1][empty.1] = 16;
-                                empty.0 -= 1;
-                            }
-                        }
-                        // 列をinput.n - 1にする
-                        for _ in 0..(input.n - 1 - empty.1) {
-                            out.push('R');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                            tiles[empty.0][empty.1 + 1] = 16;
-                            empty.1 += 1;
-                        }
-                        // aの右隣に持って行く
-                        for _ in 0..(empty.0 - tar_b.0 - 1) {
-                            out.push('U');
-                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                            tiles[empty.0 - 1][empty.1] = 16;
-                            empty.0 -= 1;
-                        }
-                    }
                     out.push('L');
                     tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
                     tiles[empty.0][empty.1 - 1] = 16;
                     empty.1 -= 1;
-                    // .b
-                    // ea になったので回す
                     out.push('U');
                     tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
                     tiles[empty.0 - 1][empty.1] = 16;
@@ -864,40 +674,126 @@ fn slide2(
                     tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
                     tiles[empty.0][empty.1 + 1] = 16;
                     empty.1 += 1;
-                    out.push('D');
-                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                    tiles[empty.0 + 1][empty.1] = 16;
-                    empty.0 += 1;
+                    return out;
+                } else {
+                    // aをtar_bにスライドさせて、その後bをtar_bにスライドさせると揃う
+                    // 注意 a_nowを再計算しないようにする b_nowは？
+                    // aを動かさない場所にあるはず？だから再計算しても良さそう
+                    // tar_aにあるbを触りたくないのでfixしておく
+                    let out1 = slide(tar_b, a_now, input, tiles);
+                    for oi in out1 {
+                        out.push(oi);
+                    }
+                    fix[tar_b.0][tar_b.1] = true;
+                    fix[tar_a.0][tar_a.1] = true;
+                    let b_now = get_now(tar_b, fix, input, tiles, tree_tiles);
+                    fix[tar_b.0][tar_b.1] = false;
+                    fix[tar_a.0][tar_a.1] = false;
+                    let out2 = slide(tar_b, b_now, input, tiles);
+                    for oi in out2 {
+                        out.push(oi);
+                    }
                     return out;
                 }
+            }
+            if tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
+                && tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_b.0][tar_b.1]
+            {
+                // ..
+                // ba
+                // a_nowとb_nowは想定と違う可能性があるためセットする
+                // a_now = (tar_b.0 + 1, tar_b.1 + 1);
+                b_now = (tar_b.0 + 1, tar_b.1);
+                // 1回回す ただし上のパターンまでで回していたのと逆回り
+                // まずinput.n - 2の行に持って行く
+                if empty.0 < input.n - 2 {
+                    for _ in 0..(input.n - 2 - empty.0) {
+                        out.push('D');
+                        tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                        tiles[empty.0 + 1][empty.1] = 16;
+                        empty.0 += 1;
+                    }
+                } else {
+                    for _ in 0..(empty.0 - input.n + 2) {
+                        out.push('U');
+                        tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                        tiles[empty.0 - 1][empty.1] = 16;
+                        empty.0 -= 1;
+                    }
+                }
+                // bの隣に持って行く
+                for _ in 0..(empty.1 - b_now.1) {
+                    out.push('L');
+                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                    tiles[empty.0][empty.1 - 1] = 16;
+                    empty.1 -= 1;
+                }
+                // 回す
+                out.push('D');
+                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                tiles[empty.0 + 1][empty.1] = 16;
+                empty.0 += 1;
+                out.push('R');
+                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                tiles[empty.0][empty.1 + 1] = 16;
+                empty.1 += 1;
+                return out;
+            }
+        }
+        // bがあるかチェック
+        if tiles[tar_b.0][tar_b.1] == tree_tiles[tar_b.0][tar_b.1]
+            || tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_b.0][tar_b.1]
+            || tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
+            || tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
+        {
+            // aもあるかチェック
+            if tiles[tar_b.0][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
+                || tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
+                || tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
+                || tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
+            {
+                // aがある
+                if tar_a.0 <= tar_a.1 {
+                    // 上三角の場合
 
-                if !(tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
-                    && tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1])
-                {
-                    // .a
-                    // .b
-                    // でない場合、これにする
-                    // 7パターン
                     if tiles[tar_b.0][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
-                        && tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
+                        && tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
+                        && empty != (tar_b.0, tar_b.1 + 1)
                     {
-                        // orange 1
-                        // ab
-                        // ..
-                        // 空きマスをbの上に持って行く
-                        for _ in 0..(input.n - 1 - empty.1) {
-                            out.push('R');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                            tiles[empty.0][empty.1 + 1] = 16;
-                            empty.1 += 1;
+                        // ax <- xがemptyでない
+                        // .b
+                        // とき
+                        // a.
+                        // b. にして回す 必勝パターン
+                        // まず空きマスをinput.n - 2の列に持ってくる
+                        if empty.1 == input.n - 1 {
+                            out.push('L');
+                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                            tiles[empty.0][empty.1 - 1] = 16;
+                            empty.1 -= 1;
+                        } else {
+                            // input.n - 2 >= empty.1
+                            for _ in 0..(input.n - 2 - empty.1) {
+                                out.push('R');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                tiles[empty.0][empty.1 + 1] = 16;
+                                empty.1 += 1;
+                            }
                         }
+                        // tar_b.0 + 1の行まで持ってくる
                         for _ in 0..(tar_b.0 + 1 - empty.0) {
                             out.push('U');
                             tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
                             tiles[empty.0 - 1][empty.1] = 16;
                             empty.0 -= 1;
                         }
-                        // 回す
+                        out.push('R');
+                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                        tiles[empty.0][empty.1 + 1] = 16;
+                        empty.1 += 1;
+                        // a.
+                        // be
+                        // になった回す
                         out.push('U');
                         tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
                         tiles[empty.0 - 1][empty.1] = 16;
@@ -906,109 +802,24 @@ fn slide2(
                         tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
                         tiles[empty.0][empty.1 - 1] = 16;
                         empty.1 -= 1;
-                    } else if tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
-                        && tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_b.0][tar_b.1]
-                    {
-                        // orange 2
-                        // ..
-                        // ba
-                        // こいつだけ別枠にしない？回しにくいから
-                        // bを排除して"このa"(now_aとは限らない)をtar_bにslide、
-                        // その後tar_a,tar_bをfixしてbをtar_bにslide
+                        out.push('D');
+                        tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                        tiles[empty.0 + 1][empty.1] = 16;
+                        empty.0 += 1;
+                        return out;
+                    }
 
-                        // 空きマスがtar_b.0 と同じ行にあるかで場合分け
-                        // あるなら
-                        // e. 　.a
-                        // ba をbe にできる これはgreen 2
-                        if empty.0 == tar_b.0 {
-                            if empty.1 == tar_b.1 {
-                                out.push('R');
-                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                                tiles[empty.0][empty.1 + 1] = 16;
-                                empty.1 += 1;
-                            }
-                            out.push('D');
-                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                            tiles[empty.0 + 1][empty.1] = 16;
-                            empty.0 += 1;
-                            // green 2. かつもう空きマスがbの隣
-                            out.push('L');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                            tiles[empty.0][empty.1 - 1] = 16;
-                            empty.1 -= 1;
-                        } else {
-                            // bの左隣に空きマスを持ってくる
-                            // 空きマスは列から揃える
-                            if tar_b.1 - 1 < empty.1 {
-                                for _ in 0..(empty.1 - tar_b.1 + 1) {
-                                    out.push('L');
-                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                                    tiles[empty.0][empty.1 - 1] = 16;
-                                    empty.1 -= 1;
-                                }
-                            } else {
-                                for _ in 0..(tar_b.1 - 1 - empty.1) {
-                                    out.push('R');
-                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                                    tiles[empty.0][empty.1 + 1] = 16;
-                                    empty.1 += 1;
-                                }
-                            }
-                            // 空きマスを行をtar_b.0 + 1にする
-                            for _ in 0..(empty.0 - tar_b.0 - 1) {
-                                out.push('U');
-                                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                                tiles[empty.0 - 1][empty.1] = 16;
-                                empty.0 -= 1;
-                            }
-                            // 空きマスがbの左隣
-                            out.push('R');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                            tiles[empty.0][empty.1 + 1] = 16;
-                            empty.1 += 1;
-                            // ...
-                            // bea
-                            out.push('R');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                            tiles[empty.0][empty.1 + 1] = 16;
-                            empty.1 += 1;
-                            out.push('U');
-                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                            tiles[empty.0 - 1][empty.1] = 16;
-                            empty.0 -= 1;
-                            out.push('L');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                            tiles[empty.0][empty.1 - 1] = 16;
-                            empty.1 -= 1;
-                            out.push('D');
-                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                            tiles[empty.0 + 1][empty.1] = 16;
-                            empty.0 += 1;
-                            // .a.
-                            // be.
-                            fix[tar_b.0][tar_b.1] = true;
-                            fix[tar_a.0][tar_a.1] = true;
-                            let b_now = get_now(tar_b, fix, input, tiles, tree_tiles);
-                            fix[tar_b.0][tar_b.1] = false;
-                            fix[tar_a.0][tar_a.1] = false;
-                            let out2 = slide(tar_b, b_now, input, tiles);
-                            for oi in out2 {
-                                out.push(oi);
-                            }
-                            return out;
-                        }
-                    } else if tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
-                        && tiles[tar_b.0][tar_b.1] == tree_tiles[tar_b.0][tar_b.1]
+                    if tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
+                        && tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
+                        && empty != tar_b
                     {
-                        // orange 3
-                        // b.
-                        // a
-                        if empty == (tar_b.0, tar_b.1 + 1) {
-                            out.push('D');
-                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                            tiles[empty.0 + 1][empty.1] = 16;
-                            empty.0 += 1;
-                        } else if empty != (tar_b.0 + 1, tar_b.1 + 1) {
+                        // xb <- xがemptyでない
+                        // a.
+                        // とき
+                        // .b
+                        // .a にして回す 必勝パターン
+                        // 空きマスがaの右隣に持って行きたい
+                        if empty != (tar_b.0 + 1, tar_b.1 + 1) {
                             // まずは行をtar_b.0 + 2にする
                             if tar_b.0 + 2 > empty.0 {
                                 for _ in 0..(tar_b.0 + 2 - empty.0) {
@@ -1032,7 +843,7 @@ fn slide2(
                                 tiles[empty.0][empty.1 + 1] = 16;
                                 empty.1 += 1;
                             }
-                            // aの隣まで持って行く
+                            // aの右隣に持って行く
                             for _ in 0..(empty.0 - tar_b.0 - 1) {
                                 out.push('U');
                                 tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
@@ -1040,11 +851,12 @@ fn slide2(
                                 empty.0 -= 1;
                             }
                         }
-                        // 左回り 右回りより1手減る
                         out.push('L');
                         tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
                         tiles[empty.0][empty.1 - 1] = 16;
                         empty.1 -= 1;
+                        // .b
+                        // ea になったので回す
                         out.push('U');
                         tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
                         tiles[empty.0 - 1][empty.1] = 16;
@@ -1057,26 +869,333 @@ fn slide2(
                         tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
                         tiles[empty.0 + 1][empty.1] = 16;
                         empty.0 += 1;
-                        out.push('L');
-                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                        tiles[empty.0][empty.1 - 1] = 16;
-                        empty.1 -= 1;
-                    } else if tiles[tar_b.0][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
+                        return out;
+                    }
+
+                    if !(tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
+                        && tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1])
+                    {
+                        // .a
+                        // .b
+                        // でない場合、これにする
+                        // 7パターン
+                        if tiles[tar_b.0][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
+                            && tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
+                        {
+                            // orange 1
+                            // ab
+                            // ..
+                            // 空きマスをbの上に持って行く
+                            for _ in 0..(input.n - 1 - empty.1) {
+                                out.push('R');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                tiles[empty.0][empty.1 + 1] = 16;
+                                empty.1 += 1;
+                            }
+                            for _ in 0..(tar_b.0 + 1 - empty.0) {
+                                out.push('U');
+                                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                tiles[empty.0 - 1][empty.1] = 16;
+                                empty.0 -= 1;
+                            }
+                            // 回す
+                            out.push('U');
+                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                            tiles[empty.0 - 1][empty.1] = 16;
+                            empty.0 -= 1;
+                            out.push('L');
+                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                            tiles[empty.0][empty.1 - 1] = 16;
+                            empty.1 -= 1;
+                        } else if tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
+                            && tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_b.0][tar_b.1]
+                        {
+                            // orange 2
+                            // ..
+                            // ba
+                            // こいつだけ別枠にしない？回しにくいから
+                            // bを排除して"このa"(now_aとは限らない)をtar_bにslide、
+                            // その後tar_a,tar_bをfixしてbをtar_bにslide
+
+                            // 空きマスがtar_b.0 と同じ行にあるかで場合分け
+                            // あるなら
+                            // e. 　.a
+                            // ba をbe にできる これはgreen 2
+                            if empty.0 == tar_b.0 {
+                                if empty.1 == tar_b.1 {
+                                    out.push('R');
+                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                    tiles[empty.0][empty.1 + 1] = 16;
+                                    empty.1 += 1;
+                                }
+                                out.push('D');
+                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                tiles[empty.0 + 1][empty.1] = 16;
+                                empty.0 += 1;
+                                // green 2. かつもう空きマスがbの隣
+                                out.push('L');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                tiles[empty.0][empty.1 - 1] = 16;
+                                empty.1 -= 1;
+                            } else {
+                                // bの左隣に空きマスを持ってくる
+                                // 空きマスは列から揃える
+                                if tar_b.1 - 1 < empty.1 {
+                                    for _ in 0..(empty.1 - tar_b.1 + 1) {
+                                        out.push('L');
+                                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                        tiles[empty.0][empty.1 - 1] = 16;
+                                        empty.1 -= 1;
+                                    }
+                                } else {
+                                    for _ in 0..(tar_b.1 - 1 - empty.1) {
+                                        out.push('R');
+                                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                        tiles[empty.0][empty.1 + 1] = 16;
+                                        empty.1 += 1;
+                                    }
+                                }
+                                // 空きマスを行をtar_b.0 + 1にする
+                                for _ in 0..(empty.0 - tar_b.0 - 1) {
+                                    out.push('U');
+                                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                    tiles[empty.0 - 1][empty.1] = 16;
+                                    empty.0 -= 1;
+                                }
+                                // 空きマスがbの左隣
+                                out.push('R');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                tiles[empty.0][empty.1 + 1] = 16;
+                                empty.1 += 1;
+                                // ...
+                                // bea
+                                out.push('R');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                tiles[empty.0][empty.1 + 1] = 16;
+                                empty.1 += 1;
+                                out.push('U');
+                                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                tiles[empty.0 - 1][empty.1] = 16;
+                                empty.0 -= 1;
+                                out.push('L');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                tiles[empty.0][empty.1 - 1] = 16;
+                                empty.1 -= 1;
+                                out.push('D');
+                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                tiles[empty.0 + 1][empty.1] = 16;
+                                empty.0 += 1;
+                                // .a.
+                                // be.
+                                fix[tar_b.0][tar_b.1] = true;
+                                fix[tar_a.0][tar_a.1] = true;
+                                let b_now = get_now(tar_b, fix, input, tiles, tree_tiles);
+                                fix[tar_b.0][tar_b.1] = false;
+                                fix[tar_a.0][tar_a.1] = false;
+                                let out2 = slide(tar_b, b_now, input, tiles);
+                                for oi in out2 {
+                                    out.push(oi);
+                                }
+                                return out;
+                            }
+                        } else if tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
+                            && tiles[tar_b.0][tar_b.1] == tree_tiles[tar_b.0][tar_b.1]
+                        {
+                            // orange 3
+                            // b.
+                            // a
+                            if empty == (tar_b.0, tar_b.1 + 1) {
+                                out.push('D');
+                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                tiles[empty.0 + 1][empty.1] = 16;
+                                empty.0 += 1;
+                            } else if empty != (tar_b.0 + 1, tar_b.1 + 1) {
+                                // まずは行をtar_b.0 + 2にする
+                                if tar_b.0 + 2 > empty.0 {
+                                    for _ in 0..(tar_b.0 + 2 - empty.0) {
+                                        out.push('D');
+                                        tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                        tiles[empty.0 + 1][empty.1] = 16;
+                                        empty.0 += 1;
+                                    }
+                                } else {
+                                    for _ in 0..(empty.0 - tar_b.0 - 2) {
+                                        out.push('U');
+                                        tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                        tiles[empty.0 - 1][empty.1] = 16;
+                                        empty.0 -= 1;
+                                    }
+                                }
+                                // 列をinput.n - 1にする
+                                for _ in 0..(input.n - 1 - empty.1) {
+                                    out.push('R');
+                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                    tiles[empty.0][empty.1 + 1] = 16;
+                                    empty.1 += 1;
+                                }
+                                // aの隣まで持って行く
+                                for _ in 0..(empty.0 - tar_b.0 - 1) {
+                                    out.push('U');
+                                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                    tiles[empty.0 - 1][empty.1] = 16;
+                                    empty.0 -= 1;
+                                }
+                            }
+                            // 左回り 右回りより1手減る
+                            out.push('L');
+                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                            tiles[empty.0][empty.1 - 1] = 16;
+                            empty.1 -= 1;
+                            out.push('U');
+                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                            tiles[empty.0 - 1][empty.1] = 16;
+                            empty.0 -= 1;
+                            out.push('R');
+                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                            tiles[empty.0][empty.1 + 1] = 16;
+                            empty.1 += 1;
+                            out.push('D');
+                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                            tiles[empty.0 + 1][empty.1] = 16;
+                            empty.0 += 1;
+                            out.push('L');
+                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                            tiles[empty.0][empty.1 - 1] = 16;
+                            empty.1 -= 1;
+                        } else if tiles[tar_b.0][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
+                            && tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
+                        {
+                            // green 1
+                            // ae <- eは必ずempty
+                            // .b
+                            out.push('L');
+                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                            tiles[empty.0][empty.1 - 1] = 16;
+                            empty.1 -= 1;
+                        } else if tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
+                            && tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_b.0][tar_b.1]
+                        {
+                            // green 2
+                            // xa <- xはemptyでない
+                            // b.
+                            // まずは行をtar_b.0 + 2にする
+                            if tar_b.0 + 2 > empty.0 {
+                                for _ in 0..(tar_b.0 + 2 - empty.0) {
+                                    out.push('D');
+                                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                    tiles[empty.0 + 1][empty.1] = 16;
+                                    empty.0 += 1;
+                                }
+                            } else {
+                                for _ in 0..(empty.0 - tar_b.0 - 2) {
+                                    out.push('U');
+                                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                    tiles[empty.0 - 1][empty.1] = 16;
+                                    empty.0 -= 1;
+                                }
+                            }
+                            // 列をinput.n - 1にする
+                            for _ in 0..(input.n - 1 - empty.1) {
+                                out.push('R');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                tiles[empty.0][empty.1 + 1] = 16;
+                                empty.1 += 1;
+                            }
+                            // bの右隣に持って行く
+                            for _ in 0..(empty.0 - tar_b.0 - 1) {
+                                out.push('U');
+                                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                tiles[empty.0 - 1][empty.1] = 16;
+                                empty.0 -= 1;
+                            }
+                            // xa
+                            // be
+                            // 回す
+                            out.push('L');
+                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                            tiles[empty.0][empty.1 - 1] = 16;
+                            empty.1 -= 1;
+                        } else if tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
+                            && tiles[tar_b.0][tar_b.1] == tree_tiles[tar_b.0][tar_b.1]
+                        {
+                            // green 3
+                            // bx <- xはemptyでない
+                            // .a
+                            // まず空きマスをinput.n - 2の列に持ってくる
+                            if empty.1 == input.n - 1 {
+                                out.push('L');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                tiles[empty.0][empty.1 - 1] = 16;
+                                empty.1 -= 1;
+                            } else {
+                                // input.n - 2 >= empty.1
+                                for _ in 0..(input.n - 2 - empty.1) {
+                                    out.push('R');
+                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                    tiles[empty.0][empty.1 + 1] = 16;
+                                    empty.1 += 1;
+                                }
+                            }
+                            // tar_b.0 + 1の行まで持ってくる
+                            for _ in 0..(tar_b.0 + 1 - empty.0) {
+                                out.push('U');
+                                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                tiles[empty.0 - 1][empty.1] = 16;
+                                empty.0 -= 1;
+                            }
+                            // bx
+                            // ea
+                            // 回す
+                            out.push('U');
+                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                            tiles[empty.0 - 1][empty.1] = 16;
+                            empty.0 -= 1;
+                            out.push('R');
+                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                            tiles[empty.0][empty.1 + 1] = 16;
+                            empty.1 += 1;
+                            out.push('D');
+                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                            tiles[empty.0 + 1][empty.1] = 16;
+                            empty.0 += 1;
+                            out.push('L');
+                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                            tiles[empty.0][empty.1 - 1] = 16;
+                            empty.1 -= 1;
+                        } else if tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
+                            && tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
+                        {
+                            // green 4
+                            // eb <- eは必ずempty
+                            // a.
+                            out.push('D');
+                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                            tiles[empty.0 + 1][empty.1] = 16;
+                            empty.0 += 1;
+                            out.push('R');
+                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                            tiles[empty.0][empty.1 + 1] = 16;
+                            empty.1 += 1;
+                            out.push('U');
+                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                            tiles[empty.0 - 1][empty.1] = 16;
+                            empty.0 -= 1;
+                            out.push('L');
+                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                            tiles[empty.0][empty.1 - 1] = 16;
+                            empty.1 -= 1;
+                        }
+                    }
+
+                    if tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
                         && tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
                     {
-                        // green 1
-                        // ae <- eは必ずempty
+                        // .a
                         // .b
-                        out.push('L');
-                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                        tiles[empty.0][empty.1 - 1] = 16;
-                        empty.1 -= 1;
-                    } else if tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
-                        && tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_b.0][tar_b.1]
-                    {
-                        // green 2
-                        // xa <- xはemptyでない
-                        // b.
+                        // bを1回上にあげてからaをtar_bに（now_aをこの右上のaにする）
+                        // tar_aとtar_bをfixしてnow_bを計算し、tar_bにbを移動すれば完成
+
+                        // bの下に空きマスを持ってくる
                         // まずは行をtar_b.0 + 2にする
                         if tar_b.0 + 2 > empty.0 {
                             for _ in 0..(tar_b.0 + 2 - empty.0) {
@@ -1100,51 +1219,17 @@ fn slide2(
                             tiles[empty.0][empty.1 + 1] = 16;
                             empty.1 += 1;
                         }
-                        // bの右隣に持って行く
-                        for _ in 0..(empty.0 - tar_b.0 - 1) {
-                            out.push('U');
-                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                            tiles[empty.0 - 1][empty.1] = 16;
-                            empty.0 -= 1;
-                        }
-                        // xa
-                        // be
-                        // 回す
-                        out.push('L');
-                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                        tiles[empty.0][empty.1 - 1] = 16;
-                        empty.1 -= 1;
-                    } else if tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
-                        && tiles[tar_b.0][tar_b.1] == tree_tiles[tar_b.0][tar_b.1]
-                    {
-                        // green 3
-                        // bx <- xはemptyでない
                         // .a
-                        // まず空きマスをinput.n - 2の列に持ってくる
-                        if empty.1 == input.n - 1 {
-                            out.push('L');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                            tiles[empty.0][empty.1 - 1] = 16;
-                            empty.1 -= 1;
-                        } else {
-                            // input.n - 2 >= empty.1
-                            for _ in 0..(input.n - 2 - empty.1) {
-                                out.push('R');
-                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                                tiles[empty.0][empty.1 + 1] = 16;
-                                empty.1 += 1;
-                            }
-                        }
-                        // tar_b.0 + 1の行まで持ってくる
-                        for _ in 0..(tar_b.0 + 1 - empty.0) {
-                            out.push('U');
-                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                            tiles[empty.0 - 1][empty.1] = 16;
-                            empty.0 -= 1;
-                        }
-                        // bx
-                        // ea
-                        // 回す
+                        // .b
+                        // .e になった
+                        out.push('U');
+                        tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                        tiles[empty.0 - 1][empty.1] = 16;
+                        empty.0 -= 1;
+                        out.push('L');
+                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                        tiles[empty.0][empty.1 - 1] = 16;
+                        empty.1 -= 1;
                         out.push('U');
                         tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
                         tiles[empty.0 - 1][empty.1] = 16;
@@ -1157,250 +1242,61 @@ fn slide2(
                         tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
                         tiles[empty.0 + 1][empty.1] = 16;
                         empty.0 += 1;
-                        out.push('L');
-                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                        tiles[empty.0][empty.1 - 1] = 16;
-                        empty.1 -= 1;
-                    } else if tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
-                        && tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
-                    {
-                        // green 4
-                        // eb <- eは必ずempty
                         // a.
-                        out.push('D');
-                        tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                        tiles[empty.0 + 1][empty.1] = 16;
-                        empty.0 += 1;
-                        out.push('R');
-                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                        tiles[empty.0][empty.1 + 1] = 16;
-                        empty.1 += 1;
-                        out.push('U');
-                        tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                        tiles[empty.0 - 1][empty.1] = 16;
-                        empty.0 -= 1;
-                        out.push('L');
-                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                        tiles[empty.0][empty.1 - 1] = 16;
-                        empty.1 -= 1;
-                    }
-                }
-
-                if tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
-                    && tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
-                {
-                    // .a
-                    // .b
-                    // bを1回上にあげてからaをtar_bに（now_aをこの右上のaにする）
-                    // tar_aとtar_bをfixしてnow_bを計算し、tar_bにbを移動すれば完成
-
-                    // bの下に空きマスを持ってくる
-                    // まずは行をtar_b.0 + 2にする
-                    if tar_b.0 + 2 > empty.0 {
-                        for _ in 0..(tar_b.0 + 2 - empty.0) {
-                            out.push('D');
-                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                            tiles[empty.0 + 1][empty.1] = 16;
-                            empty.0 += 1;
+                        // .e
+                        // .b
+                        fix[tar_b.0][tar_b.1] = true;
+                        fix[tar_a.0][tar_a.1] = true;
+                        let b_now = get_now(tar_b, fix, input, tiles, tree_tiles);
+                        fix[tar_b.0][tar_b.1] = false;
+                        fix[tar_a.0][tar_a.1] = false;
+                        let out2 = slide(tar_b, b_now, input, tiles);
+                        for oi in out2 {
+                            out.push(oi);
                         }
-                    } else {
-                        for _ in 0..(empty.0 - tar_b.0 - 2) {
-                            out.push('U');
-                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                            tiles[empty.0 - 1][empty.1] = 16;
-                            empty.0 -= 1;
-                        }
+                        return out;
                     }
-                    // 列をinput.n - 1にする
-                    for _ in 0..(input.n - 1 - empty.1) {
-                        out.push('R');
-                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                        tiles[empty.0][empty.1 + 1] = 16;
-                        empty.1 += 1;
-                    }
-                    // .a
-                    // .b
-                    // .e になった
-                    out.push('U');
-                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                    tiles[empty.0 - 1][empty.1] = 16;
-                    empty.0 -= 1;
-                    out.push('L');
-                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                    tiles[empty.0][empty.1 - 1] = 16;
-                    empty.1 -= 1;
-                    out.push('U');
-                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                    tiles[empty.0 - 1][empty.1] = 16;
-                    empty.0 -= 1;
-                    out.push('R');
-                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                    tiles[empty.0][empty.1 + 1] = 16;
-                    empty.1 += 1;
-                    out.push('D');
-                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                    tiles[empty.0 + 1][empty.1] = 16;
-                    empty.0 += 1;
-                    // a.
-                    // .e
-                    // .b
-                    fix[tar_b.0][tar_b.1] = true;
-                    fix[tar_a.0][tar_a.1] = true;
-                    let b_now = get_now(tar_b, fix, input, tiles, tree_tiles);
-                    fix[tar_b.0][tar_b.1] = false;
-                    fix[tar_a.0][tar_a.1] = false;
-                    let out2 = slide(tar_b, b_now, input, tiles);
-                    for oi in out2 {
-                        out.push(oi);
-                    }
-                    return out;
-                }
-                unreachable!();
-            } else {
-                // 下三角の場合
-                if tiles[tar_b.0][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
-                    && tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
-                    && empty != (tar_b.0 + 1, tar_b.1)
-                {
-                    // a.
-                    // xb <- xがemptyでない
-                    // とき
-                    // ab
-                    // .. にして回す 必勝パターン
-                    // まず空きマスをinput.n - 2の行に持ってくる
-                    if empty.0 == input.n - 1 {
-                        out.push('U');
-                        tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                        tiles[empty.0 - 1][empty.1] = 16;
-                        empty.0 -= 1;
-                    } else {
-                        // input.n - 2 >= empty.0
-                        for _ in 0..(input.n - 2 - empty.0) {
-                            out.push('D');
-                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                            tiles[empty.0 + 1][empty.1] = 16;
-                            empty.0 += 1;
-                        }
-                    }
-                    // tar_b.1 + 1の列まで持ってくる
-                    for _ in 0..(tar_b.1 + 1 - empty.1) {
-                        out.push('L');
-                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                        tiles[empty.0][empty.1 - 1] = 16;
-                        empty.1 -= 1;
-                    }
-                    out.push('D');
-                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                    tiles[empty.0 + 1][empty.1] = 16;
-                    empty.0 += 1;
-                    // ab
-                    // .e
-                    // になった回す
-                    out.push('L');
-                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                    tiles[empty.0][empty.1 - 1] = 16;
-                    empty.1 -= 1;
-                    out.push('U');
-                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                    tiles[empty.0 - 1][empty.1] = 16;
-                    empty.0 -= 1;
-                    out.push('R');
-                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                    tiles[empty.0][empty.1 + 1] = 16;
-                    empty.1 += 1;
-                    return out;
-                }
-
-                if tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
-                    && tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_b.0][tar_b.1]
-                    && empty != tar_b
-                {
-                    // xa <- xがemptyでない
-                    // b.
-                    // とき
-                    // ..
-                    // ba にして回す 必勝パターン
-                    // 空きマスをaの下に持って行きたい
-                    if empty != (tar_b.0 + 1, tar_b.1 + 1) {
-                        // まずは列をtar_b.1 + 2にする
-                        if tar_b.1 + 2 > empty.1 {
-                            for _ in 0..(tar_b.1 + 2 - empty.1) {
-                                out.push('R');
-                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                                tiles[empty.0][empty.1 + 1] = 16;
-                                empty.1 += 1;
-                            }
-                        } else {
-                            for _ in 0..(empty.1 - tar_b.1 - 2) {
-                                out.push('L');
-                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                                tiles[empty.0][empty.1 - 1] = 16;
-                                empty.1 -= 1;
-                            }
-                        }
-                        // 行をinput.n - 1にする
-                        for _ in 0..(input.n - 1 - empty.0) {
-                            out.push('D');
-                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                            tiles[empty.0 + 1][empty.1] = 16;
-                            empty.0 += 1;
-                        }
-                        // aの下に持って行く
-                        for _ in 0..(empty.1 - tar_b.1 - 1) {
-                            out.push('L');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                            tiles[empty.0][empty.1 - 1] = 16;
-                            empty.1 -= 1;
-                        }
-                    }
-                    out.push('U');
-                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                    tiles[empty.0 - 1][empty.1] = 16;
-                    empty.0 -= 1;
-                    // .e
-                    // ba になったので回す
-                    out.push('L');
-                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                    tiles[empty.0][empty.1 - 1] = 16;
-                    empty.1 -= 1;
-                    out.push('D');
-                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                    tiles[empty.0 + 1][empty.1] = 16;
-                    empty.0 += 1;
-                    out.push('R');
-                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                    tiles[empty.0][empty.1 + 1] = 16;
-                    empty.1 += 1;
-                    return out;
-                }
-
-                if !(tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
-                    && tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1])
-                {
-                    // ..
-                    // ab
-                    // でない場合、これにする
-                    // 7パターン
+                    unreachable!();
+                } else {
+                    // 下三角の場合
                     if tiles[tar_b.0][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
-                        && tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_b.0][tar_b.1]
+                        && tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
+                        && empty != (tar_b.0 + 1, tar_b.1)
                     {
-                        // orange 1
                         // a.
-                        // b.
-                        // 空きマスをbの右に持って行く
-                        for _ in 0..(input.n - 1 - empty.0) {
-                            out.push('D');
-                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                            tiles[empty.0 + 1][empty.1] = 16;
-                            empty.0 += 1;
+                        // xb <- xがemptyでない
+                        // とき
+                        // ab
+                        // .. にして回す 必勝パターン
+                        // まず空きマスをinput.n - 2の行に持ってくる
+                        if empty.0 == input.n - 1 {
+                            out.push('U');
+                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                            tiles[empty.0 - 1][empty.1] = 16;
+                            empty.0 -= 1;
+                        } else {
+                            // input.n - 2 >= empty.0
+                            for _ in 0..(input.n - 2 - empty.0) {
+                                out.push('D');
+                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                tiles[empty.0 + 1][empty.1] = 16;
+                                empty.0 += 1;
+                            }
                         }
+                        // tar_b.1 + 1の列まで持ってくる
                         for _ in 0..(tar_b.1 + 1 - empty.1) {
                             out.push('L');
                             tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
                             tiles[empty.0][empty.1 - 1] = 16;
                             empty.1 -= 1;
                         }
-                        // 回す
+                        out.push('D');
+                        tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                        tiles[empty.0 + 1][empty.1] = 16;
+                        empty.0 += 1;
+                        // ab
+                        // .e
+                        // になった回す
                         out.push('L');
                         tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
                         tiles[empty.0][empty.1 - 1] = 16;
@@ -1409,111 +1305,24 @@ fn slide2(
                         tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
                         tiles[empty.0 - 1][empty.1] = 16;
                         empty.0 -= 1;
-                    } else if tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
-                        && tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
-                    {
-                        // orange 2
-                        // .b
-                        // .a
-                        // こいつだけ別枠にしない？回しにくいから
-                        // bを排除して"このa"(now_aとは限らない)をtar_bにslide、
-                        // その後tar_a,tar_bをfixしてbをtar_bにslide
+                        out.push('R');
+                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                        tiles[empty.0][empty.1 + 1] = 16;
+                        empty.1 += 1;
+                        return out;
+                    }
 
-                        // 空きマスがtar_b.1 と同じ列にあるかで場合分け
-                        // あるなら
-                        // eb 　.b
-                        // .a をae にできる これはgreen 4
-                        if empty.1 == tar_b.1 {
-                            if empty.0 == tar_b.0 {
-                                out.push('D');
-                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                                tiles[empty.0 + 1][empty.1] = 16;
-                                empty.0 += 1;
-                            }
-                            out.push('R');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                            tiles[empty.0][empty.1 + 1] = 16;
-                            empty.1 += 1;
-                            // green 4. かつもう空きマスがbの下
-                            out.push('U');
-                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                            tiles[empty.0 - 1][empty.1] = 16;
-                            empty.0 -= 1;
-                        } else {
-                            // bの上に空きマスを持ってくる
-                            // 空きマスは行から揃える
-                            if tar_b.0 - 1 < empty.0 {
-                                for _ in 0..(empty.0 - tar_b.0 + 1) {
-                                    out.push('U');
-                                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                                    tiles[empty.0 - 1][empty.1] = 16;
-                                    empty.0 -= 1;
-                                }
-                            } else {
-                                for _ in 0..(tar_b.0 - 1 - empty.0) {
-                                    out.push('D');
-                                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                                    tiles[empty.0 + 1][empty.1] = 16;
-                                    empty.0 += 1;
-                                }
-                            }
-                            // 空きマスの列をtar_b.1 + 1にする
-                            for _ in 0..(empty.1 - tar_b.1 - 1) {
-                                out.push('L');
-                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                                tiles[empty.0][empty.1 - 1] = 16;
-                                empty.1 -= 1;
-                            }
-                            // 空きマスがbの上
-                            out.push('D');
-                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                            tiles[empty.0 + 1][empty.1] = 16;
-                            empty.0 += 1;
-                            // .b.
-                            // .e.
-                            // .a.
-                            out.push('D');
-                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                            tiles[empty.0 + 1][empty.1] = 16;
-                            empty.0 += 1;
-                            out.push('L');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                            tiles[empty.0][empty.1 - 1] = 16;
-                            empty.1 -= 1;
-                            out.push('U');
-                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                            tiles[empty.0 - 1][empty.1] = 16;
-                            empty.0 -= 1;
-                            out.push('R');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                            tiles[empty.0][empty.1 + 1] = 16;
-                            empty.1 += 1;
-                            // .b.
-                            // ae.
-                            // ...
-                            fix[tar_b.0][tar_b.1] = true;
-                            fix[tar_a.0][tar_a.1] = true;
-                            let b_now = get_now(tar_b, fix, input, tiles, tree_tiles);
-                            fix[tar_b.0][tar_b.1] = false;
-                            fix[tar_a.0][tar_a.1] = false;
-                            let out2 = slide(tar_b, b_now, input, tiles);
-                            for oi in out2 {
-                                out.push(oi);
-                            }
-                            return out;
-                        }
-                    } else if tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
-                        && tiles[tar_b.0][tar_b.1] == tree_tiles[tar_b.0][tar_b.1]
+                    if tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
+                        && tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_b.0][tar_b.1]
+                        && empty != tar_b
                     {
-                        // orange 3
-                        // ba
+                        // xa <- xがemptyでない
+                        // b.
+                        // とき
                         // ..
-                        if empty == (tar_b.0 + 1, tar_b.1) {
-                            out.push('R');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                            tiles[empty.0][empty.1 + 1] = 16;
-                            empty.1 += 1;
-                        } else if empty != (tar_b.0 + 1, tar_b.1 + 1) {
+                        // ba にして回す 必勝パターン
+                        // 空きマスをaの下に持って行きたい
+                        if empty != (tar_b.0 + 1, tar_b.1 + 1) {
                             // まずは列をtar_b.1 + 2にする
                             if tar_b.1 + 2 > empty.1 {
                                 for _ in 0..(tar_b.1 + 2 - empty.1) {
@@ -1537,7 +1346,7 @@ fn slide2(
                                 tiles[empty.0 + 1][empty.1] = 16;
                                 empty.0 += 1;
                             }
-                            // aの下まで持って行く
+                            // aの下に持って行く
                             for _ in 0..(empty.1 - tar_b.1 - 1) {
                                 out.push('L');
                                 tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
@@ -1545,11 +1354,12 @@ fn slide2(
                                 empty.1 -= 1;
                             }
                         }
-                        // 左回り 右回りより1手減る
                         out.push('U');
                         tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
                         tiles[empty.0 - 1][empty.1] = 16;
                         empty.0 -= 1;
+                        // .e
+                        // ba になったので回す
                         out.push('L');
                         tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
                         tiles[empty.0][empty.1 - 1] = 16;
@@ -1562,26 +1372,335 @@ fn slide2(
                         tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
                         tiles[empty.0][empty.1 + 1] = 16;
                         empty.1 += 1;
-                        out.push('U');
-                        tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                        tiles[empty.0 - 1][empty.1] = 16;
-                        empty.0 -= 1;
-                    } else if tiles[tar_b.0][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
+                        return out;
+                    }
+
+                    if !(tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
+                        && tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1])
+                    {
+                        // ..
+                        // ab
+                        // でない場合、これにする
+                        // 7パターン
+                        if tiles[tar_b.0][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
+                            && tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_b.0][tar_b.1]
+                        {
+                            // orange 1
+                            // a.
+                            // b.
+                            // 空きマスをbの右に持って行く
+                            for _ in 0..(input.n - 1 - empty.0) {
+                                out.push('D');
+                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                tiles[empty.0 + 1][empty.1] = 16;
+                                empty.0 += 1;
+                            }
+                            for _ in 0..(tar_b.1 + 1 - empty.1) {
+                                out.push('L');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                tiles[empty.0][empty.1 - 1] = 16;
+                                empty.1 -= 1;
+                            }
+                            // 回す
+                            out.push('L');
+                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                            tiles[empty.0][empty.1 - 1] = 16;
+                            empty.1 -= 1;
+                            out.push('U');
+                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                            tiles[empty.0 - 1][empty.1] = 16;
+                            empty.0 -= 1;
+                        } else if tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
+                            && tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
+                        {
+                            // orange 2
+                            // .b
+                            // .a
+                            // こいつだけ別枠にしない？回しにくいから
+                            // bを排除して"このa"(now_aとは限らない)をtar_bにslide、
+                            // その後tar_a,tar_bをfixしてbをtar_bにslide
+
+                            // 空きマスがtar_b.1 と同じ列にあるかで場合分け
+                            // あるなら
+                            // eb 　.b
+                            // .a をae にできる これはgreen 4
+                            if empty.1 == tar_b.1 {
+                                if empty.0 == tar_b.0 {
+                                    out.push('D');
+                                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                    tiles[empty.0 + 1][empty.1] = 16;
+                                    empty.0 += 1;
+                                }
+                                out.push('R');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                tiles[empty.0][empty.1 + 1] = 16;
+                                empty.1 += 1;
+                                // green 4. かつもう空きマスがbの下
+                                out.push('U');
+                                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                tiles[empty.0 - 1][empty.1] = 16;
+                                empty.0 -= 1;
+                            } else {
+                                // bの上に空きマスを持ってくる
+                                // 空きマスは行から揃える
+                                if tar_b.0 - 1 < empty.0 {
+                                    for _ in 0..(empty.0 - tar_b.0 + 1) {
+                                        out.push('U');
+                                        tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                        tiles[empty.0 - 1][empty.1] = 16;
+                                        empty.0 -= 1;
+                                    }
+                                } else {
+                                    for _ in 0..(tar_b.0 - 1 - empty.0) {
+                                        out.push('D');
+                                        tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                        tiles[empty.0 + 1][empty.1] = 16;
+                                        empty.0 += 1;
+                                    }
+                                }
+                                // 空きマスの列をtar_b.1 + 1にする
+                                for _ in 0..(empty.1 - tar_b.1 - 1) {
+                                    out.push('L');
+                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                    tiles[empty.0][empty.1 - 1] = 16;
+                                    empty.1 -= 1;
+                                }
+                                // 空きマスがbの上
+                                out.push('D');
+                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                tiles[empty.0 + 1][empty.1] = 16;
+                                empty.0 += 1;
+                                // .b.
+                                // .e.
+                                // .a.
+                                out.push('D');
+                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                tiles[empty.0 + 1][empty.1] = 16;
+                                empty.0 += 1;
+                                out.push('L');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                tiles[empty.0][empty.1 - 1] = 16;
+                                empty.1 -= 1;
+                                out.push('U');
+                                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                tiles[empty.0 - 1][empty.1] = 16;
+                                empty.0 -= 1;
+                                out.push('R');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                tiles[empty.0][empty.1 + 1] = 16;
+                                empty.1 += 1;
+                                // .b.
+                                // ae.
+                                // ...
+                                fix[tar_b.0][tar_b.1] = true;
+                                fix[tar_a.0][tar_a.1] = true;
+                                let b_now = get_now(tar_b, fix, input, tiles, tree_tiles);
+                                fix[tar_b.0][tar_b.1] = false;
+                                fix[tar_a.0][tar_a.1] = false;
+                                let out2 = slide(tar_b, b_now, input, tiles);
+                                for oi in out2 {
+                                    out.push(oi);
+                                }
+                                return out;
+                            }
+                        } else if tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
+                            && tiles[tar_b.0][tar_b.1] == tree_tiles[tar_b.0][tar_b.1]
+                        {
+                            // orange 3
+                            // ba
+                            // ..
+                            if empty == (tar_b.0 + 1, tar_b.1) {
+                                out.push('R');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                tiles[empty.0][empty.1 + 1] = 16;
+                                empty.1 += 1;
+                            } else if empty != (tar_b.0 + 1, tar_b.1 + 1) {
+                                // まずは列をtar_b.1 + 2にする
+                                if tar_b.1 + 2 > empty.1 {
+                                    for _ in 0..(tar_b.1 + 2 - empty.1) {
+                                        out.push('R');
+                                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                        tiles[empty.0][empty.1 + 1] = 16;
+                                        empty.1 += 1;
+                                    }
+                                } else {
+                                    for _ in 0..(empty.1 - tar_b.1 - 2) {
+                                        out.push('L');
+                                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                        tiles[empty.0][empty.1 - 1] = 16;
+                                        empty.1 -= 1;
+                                    }
+                                }
+                                // 行をinput.n - 1にする
+                                for _ in 0..(input.n - 1 - empty.0) {
+                                    out.push('D');
+                                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                    tiles[empty.0 + 1][empty.1] = 16;
+                                    empty.0 += 1;
+                                }
+                                // aの下まで持って行く
+                                for _ in 0..(empty.1 - tar_b.1 - 1) {
+                                    out.push('L');
+                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                    tiles[empty.0][empty.1 - 1] = 16;
+                                    empty.1 -= 1;
+                                }
+                            }
+                            // 左回り 右回りより1手減る
+                            out.push('U');
+                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                            tiles[empty.0 - 1][empty.1] = 16;
+                            empty.0 -= 1;
+                            out.push('L');
+                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                            tiles[empty.0][empty.1 - 1] = 16;
+                            empty.1 -= 1;
+                            out.push('D');
+                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                            tiles[empty.0 + 1][empty.1] = 16;
+                            empty.0 += 1;
+                            out.push('R');
+                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                            tiles[empty.0][empty.1 + 1] = 16;
+                            empty.1 += 1;
+                            out.push('U');
+                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                            tiles[empty.0 - 1][empty.1] = 16;
+                            empty.0 -= 1;
+                        } else if tiles[tar_b.0][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
+                            && tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
+                        {
+                            // green 1
+                            // a.
+                            // eb <- eは必ずempty
+                            out.push('U');
+                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                            tiles[empty.0 - 1][empty.1] = 16;
+                            empty.0 -= 1;
+                        } else if tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
+                            && tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
+                        {
+                            // green 2
+                            // xb <- xはemptyでない
+                            // a.
+                            // まずは列をtar_b.1 + 2にする
+                            if tar_b.1 + 2 > empty.1 {
+                                for _ in 0..(tar_b.1 + 2 - empty.1) {
+                                    out.push('R');
+                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                    tiles[empty.0][empty.1 + 1] = 16;
+                                    empty.1 += 1;
+                                }
+                            } else {
+                                for _ in 0..(empty.1 - tar_b.1 - 2) {
+                                    out.push('L');
+                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                    tiles[empty.0][empty.1 - 1] = 16;
+                                    empty.1 -= 1;
+                                }
+                            }
+                            // 行をinput.n - 1にする
+                            for _ in 0..(input.n - 1 - empty.0) {
+                                out.push('D');
+                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                tiles[empty.0 + 1][empty.1] = 16;
+                                empty.0 += 1;
+                            }
+                            // bの下に持って行く
+                            for _ in 0..(empty.0 - tar_b.0 - 1) {
+                                out.push('L');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                tiles[empty.0][empty.1 - 1] = 16;
+                                empty.1 -= 1;
+                            }
+                            // xb
+                            // ae
+                            // 回す
+                            out.push('U');
+                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                            tiles[empty.0 - 1][empty.1] = 16;
+                            empty.0 -= 1;
+                        } else if tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
+                            && tiles[tar_b.0][tar_b.1] == tree_tiles[tar_b.0][tar_b.1]
+                        {
+                            // green 3
+                            // b.
+                            // xa <- xはemptyでない
+                            // まず空きマスをinput.n - 2の行に持ってくる
+                            if empty.1 == input.n - 1 {
+                                out.push('U');
+                                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                tiles[empty.0 - 1][empty.1] = 16;
+                                empty.0 -= 1;
+                            } else {
+                                // input.n - 2 >= empty.0
+                                for _ in 0..(input.n - 2 - empty.0) {
+                                    out.push('D');
+                                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                    tiles[empty.0 + 1][empty.1] = 16;
+                                    empty.0 += 1;
+                                }
+                            }
+                            // tar_b.1 + 1の列まで持ってくる
+                            for _ in 0..(tar_b.1 + 1 - empty.1) {
+                                out.push('L');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                tiles[empty.0][empty.1 - 1] = 16;
+                                empty.1 -= 1;
+                            }
+                            // be
+                            // .a
+                            // 回す
+                            out.push('L');
+                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                            tiles[empty.0][empty.1 - 1] = 16;
+                            empty.1 -= 1;
+                            out.push('D');
+                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                            tiles[empty.0 + 1][empty.1] = 16;
+                            empty.0 += 1;
+                            out.push('R');
+                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                            tiles[empty.0][empty.1 + 1] = 16;
+                            empty.1 += 1;
+                            out.push('U');
+                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                            tiles[empty.0 - 1][empty.1] = 16;
+                            empty.0 -= 1;
+                        } else if tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
+                            && tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_b.0][tar_b.1]
+                        {
+                            // green 4
+                            // ea <- eは必ずempty
+                            // b.
+                            out.push('R');
+                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                            tiles[empty.0][empty.1 + 1] = 16;
+                            empty.1 += 1;
+                            out.push('D');
+                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                            tiles[empty.0 + 1][empty.1] = 16;
+                            empty.0 += 1;
+                            out.push('L');
+                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                            tiles[empty.0][empty.1 - 1] = 16;
+                            empty.1 -= 1;
+                            out.push('U');
+                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                            tiles[empty.0 - 1][empty.1] = 16;
+                            empty.0 -= 1;
+                        }
+                    }
+
+                    if tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
                         && tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
                     {
-                        // green 1
-                        // a.
-                        // eb <- eは必ずempty
-                        out.push('U');
-                        tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                        tiles[empty.0 - 1][empty.1] = 16;
-                        empty.0 -= 1;
-                    } else if tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
-                        && tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
-                    {
-                        // green 2
-                        // xb <- xはemptyでない
-                        // a.
+                        // ..
+                        // ab
+                        // bを1回右にずらしてからaをtar_bに（now_aをこの左下のaにする）
+                        // tar_aとtar_bをfixしてnow_bを計算し、tar_bにbを移動すれば完成
+
+                        // bの右に空きマスを持ってくる
                         // まずは列をtar_b.1 + 2にする
                         if tar_b.1 + 2 > empty.1 {
                             for _ in 0..(tar_b.1 + 2 - empty.1) {
@@ -1605,73 +1724,381 @@ fn slide2(
                             tiles[empty.0 + 1][empty.1] = 16;
                             empty.0 += 1;
                         }
-                        // bの下に持って行く
-                        for _ in 0..(empty.0 - tar_b.0 - 1) {
-                            out.push('L');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                            tiles[empty.0][empty.1 - 1] = 16;
-                            empty.1 -= 1;
-                        }
-                        // xb
-                        // ae
-                        // 回す
+                        // ...
+                        // ...
+                        // abe になった
+                        out.push('L');
+                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                        tiles[empty.0][empty.1 - 1] = 16;
+                        empty.1 -= 1;
                         out.push('U');
                         tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
                         tiles[empty.0 - 1][empty.1] = 16;
                         empty.0 -= 1;
-                    } else if tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
-                        && tiles[tar_b.0][tar_b.1] == tree_tiles[tar_b.0][tar_b.1]
-                    {
-                        // green 3
-                        // b.
-                        // xa <- xはemptyでない
-                        // まず空きマスをinput.n - 2の行に持ってくる
-                        if empty.1 == input.n - 1 {
-                            out.push('U');
-                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                            tiles[empty.0 - 1][empty.1] = 16;
-                            empty.0 -= 1;
-                        } else {
-                            // input.n - 2 >= empty.0
-                            for _ in 0..(input.n - 2 - empty.0) {
+                        out.push('L');
+                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                        tiles[empty.0][empty.1 - 1] = 16;
+                        empty.1 -= 1;
+                        out.push('D');
+                        tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                        tiles[empty.0 + 1][empty.1] = 16;
+                        empty.0 += 1;
+                        out.push('R');
+                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                        tiles[empty.0][empty.1 + 1] = 16;
+                        empty.1 += 1;
+                        // ...
+                        // a..
+                        // .eb
+                        fix[tar_b.0][tar_b.1] = true;
+                        fix[tar_a.0][tar_a.1] = true;
+                        let b_now = get_now(tar_b, fix, input, tiles, tree_tiles);
+                        fix[tar_b.0][tar_b.1] = false;
+                        fix[tar_a.0][tar_a.1] = false;
+                        let out2 = slide(tar_b, b_now, input, tiles);
+                        for oi in out2 {
+                            out.push(oi);
+                        }
+                        return out;
+                    }
+                    unreachable!();
+                }
+            } else {
+                // aはない
+                if tar_a.0 <= tar_a.1 {
+                    // 上三角の場合
+                    if tiles[tar_b.0][tar_b.1 + 1] != tree_tiles[tar_b.0][tar_b.1] {
+                        // 右上にbがなければ右上にずらす
+                        if tiles[tar_b.0][tar_b.1] == tree_tiles[tar_b.0][tar_b.1] {
+                            // まず空きマスを一番右の列に持って行く
+                            for _ in 0..(input.n - 1 - empty.1) {
+                                out.push('R');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                tiles[empty.0][empty.1 + 1] = 16;
+                                empty.1 += 1;
+                            }
+                            // 空きマスをbの隣に持って行く
+                            for _ in 0..(empty.0 - tar_b.0) {
+                                out.push('U');
+                                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                tiles[empty.0 - 1][empty.1] = 16;
+                                empty.0 -= 1;
+                            }
+                            out.push('L');
+                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                            tiles[empty.0][empty.1 - 1] = 16;
+                            empty.1 -= 1;
+                        } else if tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1] {
+                            // 空きマスをtar_aまで持って行きたい
+                            if empty != tar_a {
+                                // 列をinput.n-2に持って行って、行をtar_a.0にする
+                                if input.n - 1 == empty.1 {
+                                    out.push('L');
+                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                    tiles[empty.0][empty.1 - 1] = 16;
+                                    empty.1 -= 1;
+                                } else {
+                                    for _ in 0..(input.n - 2 - empty.1) {
+                                        out.push('R');
+                                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                        tiles[empty.0][empty.1 + 1] = 16;
+                                        empty.1 += 1;
+                                    }
+                                }
+                                for _ in 0..(empty.0 - tar_a.0) {
+                                    out.push('U');
+                                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                    tiles[empty.0 - 1][empty.1] = 16;
+                                    empty.0 -= 1;
+                                }
+                                out.push('R');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                tiles[empty.0][empty.1 + 1] = 16;
+                                empty.1 += 1;
+                            }
+                            out.push('D');
+                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                            tiles[empty.0 + 1][empty.1] = 16;
+                            empty.0 += 1;
+                        } else if tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_b.0][tar_b.1] {
+                            if empty == tar_b {
+                                // このときだけemptyを左回りに回すと得
+                                out.push('D');
+                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                tiles[empty.0 + 1][empty.1] = 16;
+                                empty.0 += 1;
+                                out.push('R');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                tiles[empty.0][empty.1 + 1] = 16;
+                                empty.1 += 1;
+                                out.push('U');
+                                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                tiles[empty.0 - 1][empty.1] = 16;
+                                empty.0 -= 1;
+                                out.push('L');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                tiles[empty.0][empty.1 - 1] = 16;
+                                empty.1 -= 1;
+                            } else {
+                                // 空きマスを一番右の列に持って行く
+                                // 空きマスとbの行が被ってるときだけ迂回
+                                if tar_b.0 + 1 == empty.0 && tar_b.1 > empty.1 {
+                                    out.push('D');
+                                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                    tiles[empty.0 + 1][empty.1] = 16;
+                                    empty.0 += 1;
+                                }
+                                for _ in 0..(input.n - 1 - empty.1) {
+                                    out.push('R');
+                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                    tiles[empty.0][empty.1 + 1] = 16;
+                                    empty.1 += 1;
+                                }
+                                // 空きマスをbの右隣まで持って行く
+                                if tar_b.0 + 1 > empty.0 {
+                                    for _ in 0..(tar_b.0 + 1 - empty.0) {
+                                        out.push('D');
+                                        tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                        tiles[empty.0 + 1][empty.1] = 16;
+                                        empty.0 += 1;
+                                    }
+                                } else {
+                                    for _ in 0..(empty.0 - tar_b.0 - 1) {
+                                        out.push('U');
+                                        tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                        tiles[empty.0 - 1][empty.1] = 16;
+                                        empty.0 -= 1;
+                                    }
+                                }
+                                // 回す
+                                out.push('L');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                tiles[empty.0][empty.1 - 1] = 16;
+                                empty.1 -= 1;
+                                out.push('U');
+                                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                tiles[empty.0 - 1][empty.1] = 16;
+                                empty.0 -= 1;
+                                out.push('R');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                tiles[empty.0][empty.1 + 1] = 16;
+                                empty.1 += 1;
                                 out.push('D');
                                 tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
                                 tiles[empty.0 + 1][empty.1] = 16;
                                 empty.0 += 1;
                             }
                         }
-                        // tar_b.1 + 1の列まで持ってくる
-                        for _ in 0..(tar_b.1 + 1 - empty.1) {
+                    }
+                    if tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1] {
+                        // .b
+                        // .. <- aを右下に持ってきて1回回す
+                        fix[tar_b.0][tar_b.1] = true;
+                        fix[tar_a.0][tar_a.1] = true;
+                        a_now = get_now(tar_a, fix, input, tiles, tree_tiles);
+                        fix[tar_b.0][tar_b.1] = false;
+                        fix[tar_a.0][tar_a.1] = false;
+                        if a_now.1 < input.n - 1 {
+                            // a_nowの右隣まで空きマスを持って行く
+                            // aは列から揃える
+                            // bを動かしたくないので空きマスは行から揃える
+                            if a_now.0 > empty.0 {
+                                if a_now.1 < empty.1 {
+                                    for _ in 0..(a_now.0 - empty.0) {
+                                        out.push('D');
+                                        tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                        tiles[empty.0 + 1][empty.1] = 16;
+                                        empty.0 += 1;
+                                    }
+                                } else {
+                                    // a_now.1 > empty.1
+                                    for _ in 0..(a_now.0 - empty.0 - 1) {
+                                        out.push('D');
+                                        tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                        tiles[empty.0 + 1][empty.1] = 16;
+                                        empty.0 += 1;
+                                    }
+                                    for _ in 0..(a_now.1 - empty.1 + 1) {
+                                        out.push('R');
+                                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                        tiles[empty.0][empty.1 + 1] = 16;
+                                        empty.1 += 1;
+                                    }
+                                    out.push('D');
+                                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                    tiles[empty.0 + 1][empty.1] = 16;
+                                    empty.0 += 1;
+                                }
+                            } else {
+                                if a_now.1 < empty.1 {
+                                    for _ in 0..(empty.0 - a_now.0) {
+                                        out.push('U');
+                                        tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                        tiles[empty.0 - 1][empty.1] = 16;
+                                        empty.0 -= 1;
+                                    }
+                                } else {
+                                    // a_now.1 > empty.1
+                                    for _ in 0..(a_now.0 - empty.0 - 1) {
+                                        out.push('U');
+                                        tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                        tiles[empty.0 - 1][empty.1] = 16;
+                                        empty.0 -= 1;
+                                    }
+                                    for _ in 0..(a_now.1 - empty.1 + 1) {
+                                        out.push('R');
+                                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                        tiles[empty.0][empty.1 + 1] = 16;
+                                        empty.1 += 1;
+                                    }
+                                    out.push('U');
+                                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                    tiles[empty.0 - 1][empty.1] = 16;
+                                    empty.0 -= 1;
+                                }
+                            }
+                            // 空きマスはa_nowと同じ行であって、a_now.1 <= empty.1となっている
+                            for _ in 0..(empty.1 - a_now.1 - 1) {
+                                out.push('L');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                tiles[empty.0][empty.1 - 1] = 16;
+                                empty.1 -= 1;
+                            }
+                            // 空きマスがa_nowの右隣に来たので、aを一番右の列まで持って行く
+                            for _ in 0..(input.n - 1 - a_now.1 - 1) {
+                                out.push('L');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                tiles[empty.0][empty.1 - 1] = 16;
+                                empty.1 -= 1;
+                                out.push('D');
+                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                tiles[empty.0 + 1][empty.1] = 16;
+                                empty.0 += 1;
+                                out.push('R');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                tiles[empty.0][empty.1 + 1] = 16;
+                                empty.1 += 1;
+                                out.push('R');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                tiles[empty.0][empty.1 + 1] = 16;
+                                empty.1 += 1;
+                                out.push('U');
+                                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                tiles[empty.0 - 1][empty.1] = 16;
+                                empty.0 -= 1;
+                            }
                             out.push('L');
                             tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
                             tiles[empty.0][empty.1 - 1] = 16;
                             empty.1 -= 1;
                         }
-                        // be
+                        a_now.1 = input.n - 1;
+                        // a_now.1 == input.n-1となった
+                        if a_now.0 > tar_b.0 + 1 {
+                            // a_nowの行を揃える
+                            // 空きマスをa_nowの1つ上に持って行きたい
+                            // 空きマスは行から揃える
+                            if a_now.0 > empty.0 {
+                                for _ in 0..(a_now.0 - empty.0 - 1) {
+                                    out.push('D');
+                                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                    tiles[empty.0 + 1][empty.1] = 16;
+                                    empty.0 += 1;
+                                }
+                            } else {
+                                if a_now.1 != empty.1 {
+                                    for _ in 0..(empty.0 - a_now.0 + 1) {
+                                        out.push('U');
+                                        tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                        tiles[empty.0 - 1][empty.1] = 16;
+                                        empty.0 -= 1;
+                                    }
+                                } else {
+                                    for _ in 0..(empty.0 - a_now.0 - 1) {
+                                        out.push('U');
+                                        tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                        tiles[empty.0 - 1][empty.1] = 16;
+                                        empty.0 -= 1;
+                                    }
+                                    out.push('L');
+                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                    tiles[empty.0][empty.1 - 1] = 16;
+                                    empty.1 -= 1;
+                                    out.push('U');
+                                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                    tiles[empty.0 - 1][empty.1] = 16;
+                                    empty.0 -= 1;
+                                    out.push('U');
+                                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                    tiles[empty.0 - 1][empty.1] = 16;
+                                    empty.0 -= 1;
+                                }
+                            }
+                            // 空きマスの行 == a_now.0 - 1
+                            // 空きマスをinput.n - 1列まで持って行く
+                            for _ in 0..(input.n - 1 - empty.1) {
+                                out.push('R');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                tiles[empty.0][empty.1 + 1] = 16;
+                                empty.1 += 1;
+                            }
+                            // 空きマスがaの1つ上
+                            for _ in 0..(a_now.0 - tar_b.0 - 2) {
+                                out.push('D');
+                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                tiles[empty.0 + 1][empty.1] = 16;
+                                empty.0 += 1;
+                                out.push('L');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                tiles[empty.0][empty.1 - 1] = 16;
+                                empty.1 -= 1;
+                                out.push('U');
+                                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                tiles[empty.0 - 1][empty.1] = 16;
+                                empty.0 -= 1;
+                                out.push('U');
+                                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                tiles[empty.0 - 1][empty.1] = 16;
+                                empty.0 -= 1;
+                                out.push('R');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                tiles[empty.0][empty.1 + 1] = 16;
+                                empty.1 += 1;
+                            }
+                            out.push('D');
+                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                            tiles[empty.0 + 1][empty.1] = 16;
+                            empty.0 += 1;
+                        }
+                        // a_now = (tar_b.0 + 1, tar_b.1 + 1)になった
+                        // .b
                         // .a
+                        b_now = (tar_b.0, tar_b.1 + 1);
+                        // 1回回す
+                        // まずinput.n - 2の列に持って行く
+                        if empty.1 < input.n - 2 {
+                            for _ in 0..(input.n - 2 - empty.1) {
+                                out.push('R');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                tiles[empty.0][empty.1 + 1] = 16;
+                                empty.1 += 1;
+                            }
+                        } else {
+                            for _ in 0..(empty.1 - input.n + 2) {
+                                out.push('L');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                tiles[empty.0][empty.1 - 1] = 16;
+                                empty.1 -= 1;
+                            }
+                        }
+                        // bの隣に持って行く
+                        for _ in 0..(empty.0 - b_now.0) {
+                            out.push('U');
+                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                            tiles[empty.0 - 1][empty.1] = 16;
+                            empty.0 -= 1;
+                        }
                         // 回す
-                        out.push('L');
-                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                        tiles[empty.0][empty.1 - 1] = 16;
-                        empty.1 -= 1;
-                        out.push('D');
-                        tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                        tiles[empty.0 + 1][empty.1] = 16;
-                        empty.0 += 1;
-                        out.push('R');
-                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                        tiles[empty.0][empty.1 + 1] = 16;
-                        empty.1 += 1;
-                        out.push('U');
-                        tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                        tiles[empty.0 - 1][empty.1] = 16;
-                        empty.0 -= 1;
-                    } else if tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
-                        && tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_b.0][tar_b.1]
-                    {
-                        // green 4
-                        // ea <- eは必ずempty
-                        // b.
                         out.push('R');
                         tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
                         tiles[empty.0][empty.1 + 1] = 16;
@@ -1680,56 +2107,389 @@ fn slide2(
                         tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
                         tiles[empty.0 + 1][empty.1] = 16;
                         empty.0 += 1;
-                        out.push('L');
-                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                        tiles[empty.0][empty.1 - 1] = 16;
-                        empty.1 -= 1;
-                        out.push('U');
-                        tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                        tiles[empty.0 - 1][empty.1] = 16;
-                        empty.0 -= 1;
+                        return out;
                     }
-                }
-
-                if tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
-                    && tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1]
-                {
-                    // ..
-                    // ab
-                    // bを1回右にずらしてからaをtar_bに（now_aをこの左下のaにする）
-                    // tar_aとtar_bをfixしてnow_bを計算し、tar_bにbを移動すれば完成
-
-                    // bの右に空きマスを持ってくる
-                    // まずは列をtar_b.1 + 2にする
-                    if tar_b.1 + 2 > empty.1 {
-                        for _ in 0..(tar_b.1 + 2 - empty.1) {
+                } else {
+                    // 下三角の場合
+                    if tiles[tar_b.0 + 1][tar_b.1] != tree_tiles[tar_b.0][tar_b.1] {
+                        // 左下にbがなければ左下にずらす
+                        if tiles[tar_b.0][tar_b.1] == tree_tiles[tar_b.0][tar_b.1] {
+                            // まず空きマスを一番下の行に持って行く
+                            for _ in 0..(input.n - 1 - empty.0) {
+                                out.push('D');
+                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                tiles[empty.0 + 1][empty.1] = 16;
+                                empty.0 += 1;
+                            }
+                            // 空きマスをbの下に持って行く
+                            for _ in 0..(empty.1 - tar_b.1) {
+                                out.push('L');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                tiles[empty.0][empty.1 - 1] = 16;
+                                empty.1 -= 1;
+                            }
+                            out.push('U');
+                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                            tiles[empty.0 - 1][empty.1] = 16;
+                            empty.0 -= 1;
+                        } else if tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1] {
+                            // 空きマスをtar_aまで持って行きたい
+                            if empty != tar_a {
+                                // 行をinput.n-2に持って行って、列をtar_a.1にする
+                                if input.n - 1 == empty.0 {
+                                    out.push('U');
+                                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                    tiles[empty.0 - 1][empty.1] = 16;
+                                    empty.0 -= 1;
+                                } else {
+                                    for _ in 0..(input.n - 2 - empty.0) {
+                                        out.push('D');
+                                        tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                        tiles[empty.0 + 1][empty.1] = 16;
+                                        empty.0 += 1;
+                                    }
+                                }
+                                for _ in 0..(empty.1 - tar_a.1) {
+                                    out.push('L');
+                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                    tiles[empty.0][empty.1 - 1] = 16;
+                                    empty.1 -= 1;
+                                }
+                                out.push('D');
+                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                tiles[empty.0 + 1][empty.1] = 16;
+                                empty.0 += 1;
+                            }
+                            out.push('R');
+                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                            tiles[empty.0][empty.1 + 1] = 16;
+                            empty.1 += 1;
+                        } else if tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1] {
+                            if empty == tar_b {
+                                // このときだけemptyを右回りに回すと得
+                                out.push('R');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                tiles[empty.0][empty.1 + 1] = 16;
+                                empty.1 += 1;
+                                out.push('D');
+                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                tiles[empty.0 + 1][empty.1] = 16;
+                                empty.0 += 1;
+                                out.push('L');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                tiles[empty.0][empty.1 - 1] = 16;
+                                empty.1 -= 1;
+                                out.push('U');
+                                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                tiles[empty.0 - 1][empty.1] = 16;
+                                empty.0 -= 1;
+                            } else {
+                                // 空きマスを一番下の行に持って行く
+                                // 空きマスとbの列が被ってるときだけ迂回
+                                if tar_b.1 + 1 == empty.1 && tar_b.0 > empty.0 {
+                                    out.push('R');
+                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                    tiles[empty.0][empty.1 + 1] = 16;
+                                    empty.1 += 1;
+                                }
+                                for _ in 0..(input.n - 1 - empty.0) {
+                                    out.push('D');
+                                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                    tiles[empty.0 + 1][empty.1] = 16;
+                                    empty.0 += 1;
+                                }
+                                // 空きマスをbの下まで持って行く
+                                if tar_b.1 + 1 > empty.1 {
+                                    for _ in 0..(tar_b.1 + 1 - empty.1) {
+                                        out.push('R');
+                                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                        tiles[empty.0][empty.1 + 1] = 16;
+                                        empty.1 += 1;
+                                    }
+                                } else {
+                                    for _ in 0..(empty.1 - tar_b.1 - 1) {
+                                        out.push('L');
+                                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                        tiles[empty.0][empty.1 - 1] = 16;
+                                        empty.1 -= 1;
+                                    }
+                                }
+                                // 回す
+                                out.push('U');
+                                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                tiles[empty.0 - 1][empty.1] = 16;
+                                empty.0 -= 1;
+                                out.push('L');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                tiles[empty.0][empty.1 - 1] = 16;
+                                empty.1 -= 1;
+                                out.push('D');
+                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                tiles[empty.0 + 1][empty.1] = 16;
+                                empty.0 += 1;
+                                out.push('R');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                tiles[empty.0][empty.1 + 1] = 16;
+                                empty.1 += 1;
+                            }
+                        }
+                    }
+                    if tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_b.0][tar_b.1] {
+                        // ..
+                        // b. <- aを右下に持ってきて1回回す
+                        fix[tar_b.0][tar_b.1] = true;
+                        fix[tar_a.0][tar_a.1] = true;
+                        a_now = get_now(tar_a, fix, input, tiles, tree_tiles);
+                        fix[tar_b.0][tar_b.1] = false;
+                        fix[tar_a.0][tar_a.1] = false;
+                        if a_now.0 < input.n - 1 {
+                            // a_nowの下まで空きマスを持って行く
+                            // aは行から揃える
+                            // bを動かしたくないので空きマスは列から揃える
+                            if a_now.1 > empty.1 {
+                                if a_now.0 < empty.0 {
+                                    for _ in 0..(a_now.1 - empty.1) {
+                                        out.push('R');
+                                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                        tiles[empty.0][empty.1 + 1] = 16;
+                                        empty.1 += 1;
+                                    }
+                                } else {
+                                    // a_now.0 > empty.0
+                                    for _ in 0..(a_now.1 - empty.1 - 1) {
+                                        out.push('R');
+                                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                        tiles[empty.0][empty.1 + 1] = 16;
+                                        empty.1 += 1;
+                                    }
+                                    for _ in 0..(a_now.0 - empty.0 + 1) {
+                                        out.push('D');
+                                        tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                        tiles[empty.0 + 1][empty.1] = 16;
+                                        empty.0 += 1;
+                                    }
+                                    out.push('R');
+                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                    tiles[empty.0][empty.1 + 1] = 16;
+                                    empty.1 += 1;
+                                }
+                            } else {
+                                if a_now.0 < empty.0 {
+                                    for _ in 0..(empty.1 - a_now.1) {
+                                        out.push('L');
+                                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                        tiles[empty.0][empty.1 - 1] = 16;
+                                        empty.1 -= 1;
+                                    }
+                                } else {
+                                    // a_now.1 > empty.1
+                                    for _ in 0..(a_now.1 - empty.1 - 1) {
+                                        out.push('L');
+                                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                        tiles[empty.0][empty.1 - 1] = 16;
+                                        empty.1 -= 1;
+                                    }
+                                    for _ in 0..(a_now.0 - empty.0 + 1) {
+                                        out.push('D');
+                                        tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                        tiles[empty.0 + 1][empty.1] = 16;
+                                        empty.0 += 1;
+                                    }
+                                    out.push('L');
+                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                    tiles[empty.0][empty.1 - 1] = 16;
+                                    empty.1 -= 1;
+                                }
+                            }
+                            // 空きマスはa_nowと同じ列であって、a_now.0 <= empty.0となっている
+                            for _ in 0..(empty.0 - a_now.0 - 1) {
+                                out.push('U');
+                                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                tiles[empty.0 - 1][empty.1] = 16;
+                                empty.0 -= 1;
+                            }
+                            // 空きマスがa_nowの下に来たので、aを一番下の列行で持って行く
+                            for _ in 0..(input.n - 1 - a_now.0 - 1) {
+                                out.push('U');
+                                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                tiles[empty.0 - 1][empty.1] = 16;
+                                empty.0 -= 1;
+                                out.push('R');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                tiles[empty.0][empty.1 + 1] = 16;
+                                empty.1 += 1;
+                                out.push('D');
+                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                tiles[empty.0 + 1][empty.1] = 16;
+                                empty.0 += 1;
+                                out.push('D');
+                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                tiles[empty.0 + 1][empty.1] = 16;
+                                empty.0 += 1;
+                                out.push('L');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                tiles[empty.0][empty.1 - 1] = 16;
+                                empty.1 -= 1;
+                            }
+                            out.push('U');
+                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                            tiles[empty.0 - 1][empty.1] = 16;
+                            empty.0 -= 1;
+                        }
+                        a_now.0 = input.n - 1;
+                        // a_now.0 == input.n-1となった
+                        if a_now.1 > tar_b.1 + 1 {
+                            // a_nowの列を揃える
+                            // 空きマスをa_nowの1つ左に持って行きたい
+                            // 空きマスは列から揃える
+                            if a_now.1 > empty.1 {
+                                for _ in 0..(a_now.1 - empty.1 - 1) {
+                                    out.push('R');
+                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                    tiles[empty.0][empty.1 + 1] = 16;
+                                    empty.1 += 1;
+                                }
+                            } else {
+                                if a_now.0 != empty.0 {
+                                    for _ in 0..(empty.1 - a_now.1 + 1) {
+                                        out.push('L');
+                                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                        tiles[empty.0][empty.1 - 1] = 16;
+                                        empty.1 -= 1;
+                                    }
+                                } else {
+                                    for _ in 0..(empty.1 - a_now.1 - 1) {
+                                        out.push('L');
+                                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                        tiles[empty.0][empty.1 - 1] = 16;
+                                        empty.1 -= 1;
+                                    }
+                                    out.push('U');
+                                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                    tiles[empty.0 - 1][empty.1] = 16;
+                                    empty.0 -= 1;
+                                    out.push('L');
+                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                    tiles[empty.0][empty.1 - 1] = 16;
+                                    empty.1 -= 1;
+                                    out.push('L');
+                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                    tiles[empty.0][empty.1 - 1] = 16;
+                                    empty.1 -= 1;
+                                }
+                            }
+                            // 空きマスの列 == a_now.1 - 1
+                            // 空きマスをinput.n - 1列まで持って行く
+                            for _ in 0..(input.n - 1 - empty.0) {
+                                out.push('D');
+                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                tiles[empty.0 + 1][empty.1] = 16;
+                                empty.0 += 1;
+                            }
+                            // 空きマスがaの1つ左
+                            for _ in 0..(a_now.1 - tar_b.1 - 2) {
+                                out.push('R');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                tiles[empty.0][empty.1 + 1] = 16;
+                                empty.1 += 1;
+                                out.push('U');
+                                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                tiles[empty.0 - 1][empty.1] = 16;
+                                empty.0 -= 1;
+                                out.push('L');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                tiles[empty.0][empty.1 - 1] = 16;
+                                empty.1 -= 1;
+                                out.push('L');
+                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                tiles[empty.0][empty.1 - 1] = 16;
+                                empty.1 -= 1;
+                                out.push('D');
+                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                tiles[empty.0 + 1][empty.1] = 16;
+                                empty.0 += 1;
+                            }
                             out.push('R');
                             tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
                             tiles[empty.0][empty.1 + 1] = 16;
                             empty.1 += 1;
                         }
-                    } else {
-                        for _ in 0..(empty.1 - tar_b.1 - 2) {
+                        // a_now = (tar_b.0 + 1, tar_b.1 + 1)になった
+                        // ..
+                        // ba
+                        b_now = (tar_b.0 + 1, tar_b.1);
+                        // 1回回す
+                        // まずinput.n - 2の行に持って行く
+                        if empty.0 < input.n - 2 {
+                            for _ in 0..(input.n - 2 - empty.0) {
+                                out.push('D');
+                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                tiles[empty.0 + 1][empty.1] = 16;
+                                empty.0 += 1;
+                            }
+                        } else {
+                            for _ in 0..(empty.0 - input.n + 2) {
+                                out.push('U');
+                                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                tiles[empty.0 - 1][empty.1] = 16;
+                                empty.0 -= 1;
+                            }
+                        }
+                        // bの隣に持って行く
+                        for _ in 0..(empty.1 - b_now.1) {
                             out.push('L');
                             tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
                             tiles[empty.0][empty.1 - 1] = 16;
                             empty.1 -= 1;
                         }
-                    }
-                    // 行をinput.n - 1にする
-                    for _ in 0..(input.n - 1 - empty.0) {
+                        // 回す
                         out.push('D');
                         tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
                         tiles[empty.0 + 1][empty.1] = 16;
                         empty.0 += 1;
+                        out.push('R');
+                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                        tiles[empty.0][empty.1 + 1] = 16;
+                        empty.1 += 1;
+                        return out;
                     }
-                    // ...
-                    // ...
-                    // abe になった
-                    out.push('L');
-                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                    tiles[empty.0][empty.1 - 1] = 16;
-                    empty.1 -= 1;
+                }
+                unreachable!();
+            }
+        }
+        // チェック終わり
+    } else {
+        // aとbが同じ数字
+        let mut count = 0;
+        for i in 0..2 {
+            for j in 0..2 {
+                if tiles[tar_b.0 + i][tar_b.1 + j] == tree_tiles[tar_b.0][tar_b.1] {
+                    count += 1;
+                }
+            }
+        }
+        if 2 <= count && empty.0 == tar_b.0 {
+            // このときだけ処理して返す
+            if tiles[tar_b.0][tar_b.1] == tree_tiles[tar_b.0][tar_b.1]
+                || tiles[tar_a.0][tar_a.1] == tree_tiles[tar_b.0][tar_b.1]
+            {
+                // 1つ下げるだけ
+                out.push('D');
+                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                tiles[empty.0 + 1][empty.1] = 16;
+                empty.0 += 1;
+            } else {
+                // e.    .e
+                // aa or aa
+                if empty.1 == tar_b.1 {
+                    out.push('D');
+                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                    tiles[empty.0 + 1][empty.1] = 16;
+                    empty.0 += 1;
+                    out.push('R');
+                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                    tiles[empty.0][empty.1 + 1] = 16;
+                    empty.1 += 1;
                     out.push('U');
                     tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
                     tiles[empty.0 - 1][empty.1] = 16;
@@ -1742,362 +2502,19 @@ fn slide2(
                     tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
                     tiles[empty.0 + 1][empty.1] = 16;
                     empty.0 += 1;
-                    out.push('R');
-                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                    tiles[empty.0][empty.1 + 1] = 16;
-                    empty.1 += 1;
-                    // ...
-                    // a..
-                    // .eb
-                    fix[tar_b.0][tar_b.1] = true;
-                    fix[tar_a.0][tar_a.1] = true;
-                    let b_now = get_now(tar_b, fix, input, tiles, tree_tiles);
-                    fix[tar_b.0][tar_b.1] = false;
-                    fix[tar_a.0][tar_a.1] = false;
-                    let out2 = slide(tar_b, b_now, input, tiles);
-                    for oi in out2 {
-                        out.push(oi);
-                    }
-                    return out;
-                }
-                unreachable!();
-            }
-        } else {
-            // aはない
-            if tar_a.0 <= tar_a.1 {
-                // 上三角の場合
-                if tiles[tar_b.0][tar_b.1 + 1] != tree_tiles[tar_b.0][tar_b.1] {
-                    // 右上にbがなければ右上にずらす
-                    if tiles[tar_b.0][tar_b.1] == tree_tiles[tar_b.0][tar_b.1] {
-                        // まず空きマスを一番右の列に持って行く
-                        for _ in 0..(input.n - 1 - empty.1) {
-                            out.push('R');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                            tiles[empty.0][empty.1 + 1] = 16;
-                            empty.1 += 1;
-                        }
-                        // 空きマスをbの隣に持って行く
-                        for _ in 0..(empty.0 - tar_b.0) {
-                            out.push('U');
-                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                            tiles[empty.0 - 1][empty.1] = 16;
-                            empty.0 -= 1;
-                        }
-                        out.push('L');
-                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                        tiles[empty.0][empty.1 - 1] = 16;
-                        empty.1 -= 1;
-                    } else if tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1] {
-                        // 空きマスをtar_aまで持って行きたい
-                        if empty != tar_a {
-                            // 列をinput.n-2に持って行って、行をtar_a.0にする
-                            if input.n - 1 == empty.1 {
-                                out.push('L');
-                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                                tiles[empty.0][empty.1 - 1] = 16;
-                                empty.1 -= 1;
-                            } else {
-                                for _ in 0..(input.n - 2 - empty.1) {
-                                    out.push('R');
-                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                                    tiles[empty.0][empty.1 + 1] = 16;
-                                    empty.1 += 1;
-                                }
-                            }
-                            for _ in 0..(empty.0 - tar_a.0) {
-                                out.push('U');
-                                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                                tiles[empty.0 - 1][empty.1] = 16;
-                                empty.0 -= 1;
-                            }
-                            out.push('R');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                            tiles[empty.0][empty.1 + 1] = 16;
-                            empty.1 += 1;
-                        }
-                        out.push('D');
-                        tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                        tiles[empty.0 + 1][empty.1] = 16;
-                        empty.0 += 1;
-                    } else if tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_b.0][tar_b.1] {
-                        if empty == tar_b {
-                            // このときだけemptyを左回りに回すと得
-                            out.push('D');
-                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                            tiles[empty.0 + 1][empty.1] = 16;
-                            empty.0 += 1;
-                            out.push('R');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                            tiles[empty.0][empty.1 + 1] = 16;
-                            empty.1 += 1;
-                            out.push('U');
-                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                            tiles[empty.0 - 1][empty.1] = 16;
-                            empty.0 -= 1;
-                            out.push('L');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                            tiles[empty.0][empty.1 - 1] = 16;
-                            empty.1 -= 1;
-                        } else {
-                            // 空きマスを一番右の列に持って行く
-                            // 空きマスとbの行が被ってるときだけ迂回
-                            if tar_b.0 + 1 == empty.0 && tar_b.1 > empty.1 {
-                                out.push('D');
-                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                                tiles[empty.0 + 1][empty.1] = 16;
-                                empty.0 += 1;
-                            }
-                            for _ in 0..(input.n - 1 - empty.1) {
-                                out.push('R');
-                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                                tiles[empty.0][empty.1 + 1] = 16;
-                                empty.1 += 1;
-                            }
-                            // 空きマスをbの右隣まで持って行く
-                            if tar_b.0 + 1 > empty.0 {
-                                for _ in 0..(tar_b.0 + 1 - empty.0) {
-                                    out.push('D');
-                                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                                    tiles[empty.0 + 1][empty.1] = 16;
-                                    empty.0 += 1;
-                                }
-                            } else {
-                                for _ in 0..(empty.0 - tar_b.0 - 1) {
-                                    out.push('U');
-                                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                                    tiles[empty.0 - 1][empty.1] = 16;
-                                    empty.0 -= 1;
-                                }
-                            }
-                            // 回す
-                            out.push('L');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                            tiles[empty.0][empty.1 - 1] = 16;
-                            empty.1 -= 1;
-                            out.push('U');
-                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                            tiles[empty.0 - 1][empty.1] = 16;
-                            empty.0 -= 1;
-                            out.push('R');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                            tiles[empty.0][empty.1 + 1] = 16;
-                            empty.1 += 1;
-                            out.push('D');
-                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                            tiles[empty.0 + 1][empty.1] = 16;
-                            empty.0 += 1;
-                        }
-                    }
-                }
-                if tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1] {
-                    // .b
-                    // .. <- aを右下に持ってきて1回回す
-                    fix[tar_b.0][tar_b.1] = true;
-                    fix[tar_a.0][tar_a.1] = true;
-                    a_now = get_now(tar_a, fix, input, tiles, tree_tiles);
-                    fix[tar_b.0][tar_b.1] = false;
-                    fix[tar_a.0][tar_a.1] = false;
-                    if a_now.1 < input.n - 1 {
-                        // a_nowの右隣まで空きマスを持って行く
-                        // aは列から揃える
-                        // bを動かしたくないので空きマスは行から揃える
-                        if a_now.0 > empty.0 {
-                            if a_now.1 < empty.1 {
-                                for _ in 0..(a_now.0 - empty.0) {
-                                    out.push('D');
-                                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                                    tiles[empty.0 + 1][empty.1] = 16;
-                                    empty.0 += 1;
-                                }
-                            } else {
-                                // a_now.1 > empty.1
-                                for _ in 0..(a_now.0 - empty.0 - 1) {
-                                    out.push('D');
-                                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                                    tiles[empty.0 + 1][empty.1] = 16;
-                                    empty.0 += 1;
-                                }
-                                for _ in 0..(a_now.1 - empty.1 + 1) {
-                                    out.push('R');
-                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                                    tiles[empty.0][empty.1 + 1] = 16;
-                                    empty.1 += 1;
-                                }
-                                out.push('D');
-                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                                tiles[empty.0 + 1][empty.1] = 16;
-                                empty.0 += 1;
-                            }
-                        } else {
-                            if a_now.1 < empty.1 {
-                                for _ in 0..(empty.0 - a_now.0) {
-                                    out.push('U');
-                                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                                    tiles[empty.0 - 1][empty.1] = 16;
-                                    empty.0 -= 1;
-                                }
-                            } else {
-                                // a_now.1 > empty.1
-                                for _ in 0..(a_now.0 - empty.0 - 1) {
-                                    out.push('U');
-                                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                                    tiles[empty.0 - 1][empty.1] = 16;
-                                    empty.0 -= 1;
-                                }
-                                for _ in 0..(a_now.1 - empty.1 + 1) {
-                                    out.push('R');
-                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                                    tiles[empty.0][empty.1 + 1] = 16;
-                                    empty.1 += 1;
-                                }
-                                out.push('U');
-                                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                                tiles[empty.0 - 1][empty.1] = 16;
-                                empty.0 -= 1;
-                            }
-                        }
-                        // 空きマスはa_nowと同じ行であって、a_now.1 <= empty.1となっている
-                        for _ in 0..(empty.1 - a_now.1 - 1) {
-                            out.push('L');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                            tiles[empty.0][empty.1 - 1] = 16;
-                            empty.1 -= 1;
-                        }
-                        // 空きマスがa_nowの右隣に来たので、aを一番右の列まで持って行く
-                        for _ in 0..(input.n - 1 - a_now.1 - 1) {
-                            out.push('L');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                            tiles[empty.0][empty.1 - 1] = 16;
-                            empty.1 -= 1;
-                            out.push('D');
-                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                            tiles[empty.0 + 1][empty.1] = 16;
-                            empty.0 += 1;
-                            out.push('R');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                            tiles[empty.0][empty.1 + 1] = 16;
-                            empty.1 += 1;
-                            out.push('R');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                            tiles[empty.0][empty.1 + 1] = 16;
-                            empty.1 += 1;
-                            out.push('U');
-                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                            tiles[empty.0 - 1][empty.1] = 16;
-                            empty.0 -= 1;
-                        }
-                        out.push('L');
-                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                        tiles[empty.0][empty.1 - 1] = 16;
-                        empty.1 -= 1;
-                    }
-                    a_now.1 = input.n - 1;
-                    // a_now.1 == input.n-1となった
-                    if a_now.0 > tar_b.0 + 1 {
-                        // a_nowの行を揃える
-                        // 空きマスをa_nowの1つ上に持って行きたい
-                        // 空きマスは行から揃える
-                        if a_now.0 > empty.0 {
-                            for _ in 0..(a_now.0 - empty.0 - 1) {
-                                out.push('D');
-                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                                tiles[empty.0 + 1][empty.1] = 16;
-                                empty.0 += 1;
-                            }
-                        } else {
-                            if a_now.1 != empty.1 {
-                                for _ in 0..(empty.0 - a_now.0 + 1) {
-                                    out.push('U');
-                                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                                    tiles[empty.0 - 1][empty.1] = 16;
-                                    empty.0 -= 1;
-                                }
-                            } else {
-                                for _ in 0..(empty.0 - a_now.0 - 1) {
-                                    out.push('U');
-                                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                                    tiles[empty.0 - 1][empty.1] = 16;
-                                    empty.0 -= 1;
-                                }
-                                out.push('L');
-                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                                tiles[empty.0][empty.1 - 1] = 16;
-                                empty.1 -= 1;
-                                out.push('U');
-                                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                                tiles[empty.0 - 1][empty.1] = 16;
-                                empty.0 -= 1;
-                                out.push('U');
-                                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                                tiles[empty.0 - 1][empty.1] = 16;
-                                empty.0 -= 1;
-                            }
-                        }
-                        // 空きマスの行 == a_now.0 - 1
-                        // 空きマスをinput.n - 1列まで持って行く
-                        for _ in 0..(input.n - 1 - empty.1) {
-                            out.push('R');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                            tiles[empty.0][empty.1 + 1] = 16;
-                            empty.1 += 1;
-                        }
-                        // 空きマスがaの1つ上
-                        for _ in 0..(a_now.0 - tar_b.0 - 2) {
-                            out.push('D');
-                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                            tiles[empty.0 + 1][empty.1] = 16;
-                            empty.0 += 1;
-                            out.push('L');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                            tiles[empty.0][empty.1 - 1] = 16;
-                            empty.1 -= 1;
-                            out.push('U');
-                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                            tiles[empty.0 - 1][empty.1] = 16;
-                            empty.0 -= 1;
-                            out.push('U');
-                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                            tiles[empty.0 - 1][empty.1] = 16;
-                            empty.0 -= 1;
-                            out.push('R');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                            tiles[empty.0][empty.1 + 1] = 16;
-                            empty.1 += 1;
-                        }
-                        out.push('D');
-                        tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                        tiles[empty.0 + 1][empty.1] = 16;
-                        empty.0 += 1;
-                    }
-                    // a_now = (tar_b.0 + 1, tar_b.1 + 1)になった
-                    // .b
-                    // .a
-                    b_now = (tar_b.0, tar_b.1 + 1);
-                    // 1回回す
-                    // まずinput.n - 2の列に持って行く
-                    if empty.1 < input.n - 2 {
-                        for _ in 0..(input.n - 2 - empty.1) {
-                            out.push('R');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                            tiles[empty.0][empty.1 + 1] = 16;
-                            empty.1 += 1;
-                        }
-                    } else {
-                        for _ in 0..(empty.1 - input.n + 2) {
-                            out.push('L');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                            tiles[empty.0][empty.1 - 1] = 16;
-                            empty.1 -= 1;
-                        }
-                    }
-                    // bの隣に持って行く
-                    for _ in 0..(empty.0 - b_now.0) {
-                        out.push('U');
-                        tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                        tiles[empty.0 - 1][empty.1] = 16;
-                        empty.0 -= 1;
-                    }
-                    // 回す
+                } else {
+                    out.push('D');
+                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                    tiles[empty.0 + 1][empty.1] = 16;
+                    empty.0 += 1;
+                    out.push('L');
+                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                    tiles[empty.0][empty.1 - 1] = 16;
+                    empty.1 -= 1;
+                    out.push('U');
+                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                    tiles[empty.0 - 1][empty.1] = 16;
+                    empty.0 -= 1;
                     out.push('R');
                     tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
                     tiles[empty.0][empty.1 + 1] = 16;
@@ -2106,357 +2523,11 @@ fn slide2(
                     tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
                     tiles[empty.0 + 1][empty.1] = 16;
                     empty.0 += 1;
-                    return out;
-                }
-            } else {
-                // 下三角の場合
-                if tiles[tar_b.0 + 1][tar_b.1] != tree_tiles[tar_b.0][tar_b.1] {
-                    // 左下にbがなければ左下にずらす
-                    if tiles[tar_b.0][tar_b.1] == tree_tiles[tar_b.0][tar_b.1] {
-                        // まず空きマスを一番下の行に持って行く
-                        for _ in 0..(input.n - 1 - empty.0) {
-                            out.push('D');
-                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                            tiles[empty.0 + 1][empty.1] = 16;
-                            empty.0 += 1;
-                        }
-                        // 空きマスをbの下に持って行く
-                        for _ in 0..(empty.1 - tar_b.1) {
-                            out.push('L');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                            tiles[empty.0][empty.1 - 1] = 16;
-                            empty.1 -= 1;
-                        }
-                        out.push('U');
-                        tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                        tiles[empty.0 - 1][empty.1] = 16;
-                        empty.0 -= 1;
-                    } else if tiles[tar_b.0 + 1][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1] {
-                        // 空きマスをtar_aまで持って行きたい
-                        if empty != tar_a {
-                            // 行をinput.n-2に持って行って、列をtar_a.1にする
-                            if input.n - 1 == empty.0 {
-                                out.push('U');
-                                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                                tiles[empty.0 - 1][empty.1] = 16;
-                                empty.0 -= 1;
-                            } else {
-                                for _ in 0..(input.n - 2 - empty.0) {
-                                    out.push('D');
-                                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                                    tiles[empty.0 + 1][empty.1] = 16;
-                                    empty.0 += 1;
-                                }
-                            }
-                            for _ in 0..(empty.1 - tar_a.1) {
-                                out.push('L');
-                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                                tiles[empty.0][empty.1 - 1] = 16;
-                                empty.1 -= 1;
-                            }
-                            out.push('D');
-                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                            tiles[empty.0 + 1][empty.1] = 16;
-                            empty.0 += 1;
-                        }
-                        out.push('R');
-                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                        tiles[empty.0][empty.1 + 1] = 16;
-                        empty.1 += 1;
-                    } else if tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_b.0][tar_b.1] {
-                        if empty == tar_b {
-                            // このときだけemptyを右回りに回すと得
-                            out.push('R');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                            tiles[empty.0][empty.1 + 1] = 16;
-                            empty.1 += 1;
-                            out.push('D');
-                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                            tiles[empty.0 + 1][empty.1] = 16;
-                            empty.0 += 1;
-                            out.push('L');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                            tiles[empty.0][empty.1 - 1] = 16;
-                            empty.1 -= 1;
-                            out.push('U');
-                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                            tiles[empty.0 - 1][empty.1] = 16;
-                            empty.0 -= 1;
-                        } else {
-                            // 空きマスを一番下の行に持って行く
-                            // 空きマスとbの列が被ってるときだけ迂回
-                            if tar_b.1 + 1 == empty.1 && tar_b.0 > empty.0 {
-                                out.push('R');
-                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                                tiles[empty.0][empty.1 + 1] = 16;
-                                empty.1 += 1;
-                            }
-                            for _ in 0..(input.n - 1 - empty.0) {
-                                out.push('D');
-                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                                tiles[empty.0 + 1][empty.1] = 16;
-                                empty.0 += 1;
-                            }
-                            // 空きマスをbの下まで持って行く
-                            if tar_b.1 + 1 > empty.1 {
-                                for _ in 0..(tar_b.1 + 1 - empty.1) {
-                                    out.push('R');
-                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                                    tiles[empty.0][empty.1 + 1] = 16;
-                                    empty.1 += 1;
-                                }
-                            } else {
-                                for _ in 0..(empty.1 - tar_b.1 - 1) {
-                                    out.push('L');
-                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                                    tiles[empty.0][empty.1 - 1] = 16;
-                                    empty.1 -= 1;
-                                }
-                            }
-                            // 回す
-                            out.push('U');
-                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                            tiles[empty.0 - 1][empty.1] = 16;
-                            empty.0 -= 1;
-                            out.push('L');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                            tiles[empty.0][empty.1 - 1] = 16;
-                            empty.1 -= 1;
-                            out.push('D');
-                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                            tiles[empty.0 + 1][empty.1] = 16;
-                            empty.0 += 1;
-                            out.push('R');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                            tiles[empty.0][empty.1 + 1] = 16;
-                            empty.1 += 1;
-                        }
-                    }
-                }
-                if tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_b.0][tar_b.1] {
-                    // ..
-                    // b. <- aを右下に持ってきて1回回す
-                    fix[tar_b.0][tar_b.1] = true;
-                    fix[tar_a.0][tar_a.1] = true;
-                    a_now = get_now(tar_a, fix, input, tiles, tree_tiles);
-                    fix[tar_b.0][tar_b.1] = false;
-                    fix[tar_a.0][tar_a.1] = false;
-                    if a_now.0 < input.n - 1 {
-                        // a_nowの下まで空きマスを持って行く
-                        // aは行から揃える
-                        // bを動かしたくないので空きマスは列から揃える
-                        if a_now.1 > empty.1 {
-                            if a_now.0 < empty.0 {
-                                for _ in 0..(a_now.1 - empty.1) {
-                                    out.push('R');
-                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                                    tiles[empty.0][empty.1 + 1] = 16;
-                                    empty.1 += 1;
-                                }
-                            } else {
-                                // a_now.0 > empty.0
-                                for _ in 0..(a_now.1 - empty.1 - 1) {
-                                    out.push('R');
-                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                                    tiles[empty.0][empty.1 + 1] = 16;
-                                    empty.1 += 1;
-                                }
-                                for _ in 0..(a_now.0 - empty.0 + 1) {
-                                    out.push('D');
-                                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                                    tiles[empty.0 + 1][empty.1] = 16;
-                                    empty.0 += 1;
-                                }
-                                out.push('R');
-                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                                tiles[empty.0][empty.1 + 1] = 16;
-                                empty.1 += 1;
-                            }
-                        } else {
-                            if a_now.0 < empty.0 {
-                                for _ in 0..(empty.1 - a_now.1) {
-                                    out.push('L');
-                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                                    tiles[empty.0][empty.1 - 1] = 16;
-                                    empty.1 -= 1;
-                                }
-                            } else {
-                                // a_now.1 > empty.1
-                                for _ in 0..(a_now.1 - empty.1 - 1) {
-                                    out.push('L');
-                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                                    tiles[empty.0][empty.1 - 1] = 16;
-                                    empty.1 -= 1;
-                                }
-                                for _ in 0..(a_now.0 - empty.0 + 1) {
-                                    out.push('D');
-                                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                                    tiles[empty.0 + 1][empty.1] = 16;
-                                    empty.0 += 1;
-                                }
-                                out.push('L');
-                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                                tiles[empty.0][empty.1 - 1] = 16;
-                                empty.1 -= 1;
-                            }
-                        }
-                        // 空きマスはa_nowと同じ列であって、a_now.0 <= empty.0となっている
-                        for _ in 0..(empty.0 - a_now.0 - 1) {
-                            out.push('U');
-                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                            tiles[empty.0 - 1][empty.1] = 16;
-                            empty.0 -= 1;
-                        }
-                        // 空きマスがa_nowの下に来たので、aを一番下の列行で持って行く
-                        for _ in 0..(input.n - 1 - a_now.0 - 1) {
-                            out.push('U');
-                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                            tiles[empty.0 - 1][empty.1] = 16;
-                            empty.0 -= 1;
-                            out.push('R');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                            tiles[empty.0][empty.1 + 1] = 16;
-                            empty.1 += 1;
-                            out.push('D');
-                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                            tiles[empty.0 + 1][empty.1] = 16;
-                            empty.0 += 1;
-                            out.push('D');
-                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                            tiles[empty.0 + 1][empty.1] = 16;
-                            empty.0 += 1;
-                            out.push('L');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                            tiles[empty.0][empty.1 - 1] = 16;
-                            empty.1 -= 1;
-                        }
-                        out.push('U');
-                        tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                        tiles[empty.0 - 1][empty.1] = 16;
-                        empty.0 -= 1;
-                    }
-                    a_now.0 = input.n - 1;
-                    // a_now.0 == input.n-1となった
-                    if a_now.1 > tar_b.1 + 1 {
-                        // a_nowの列を揃える
-                        // 空きマスをa_nowの1つ左に持って行きたい
-                        // 空きマスは列から揃える
-                        if a_now.1 > empty.1 {
-                            for _ in 0..(a_now.1 - empty.1 - 1) {
-                                out.push('R');
-                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                                tiles[empty.0][empty.1 + 1] = 16;
-                                empty.1 += 1;
-                            }
-                        } else {
-                            if a_now.0 != empty.0 {
-                                for _ in 0..(empty.1 - a_now.1 + 1) {
-                                    out.push('L');
-                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                                    tiles[empty.0][empty.1 - 1] = 16;
-                                    empty.1 -= 1;
-                                }
-                            } else {
-                                for _ in 0..(empty.1 - a_now.1 - 1) {
-                                    out.push('L');
-                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                                    tiles[empty.0][empty.1 - 1] = 16;
-                                    empty.1 -= 1;
-                                }
-                                out.push('U');
-                                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                                tiles[empty.0 - 1][empty.1] = 16;
-                                empty.0 -= 1;
-                                out.push('L');
-                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                                tiles[empty.0][empty.1 - 1] = 16;
-                                empty.1 -= 1;
-                                out.push('L');
-                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                                tiles[empty.0][empty.1 - 1] = 16;
-                                empty.1 -= 1;
-                            }
-                        }
-                        // 空きマスの列 == a_now.1 - 1
-                        // 空きマスをinput.n - 1列まで持って行く
-                        for _ in 0..(input.n - 1 - empty.0) {
-                            out.push('D');
-                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                            tiles[empty.0 + 1][empty.1] = 16;
-                            empty.0 += 1;
-                        }
-                        // 空きマスがaの1つ左
-                        for _ in 0..(a_now.1 - tar_b.1 - 2) {
-                            out.push('R');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                            tiles[empty.0][empty.1 + 1] = 16;
-                            empty.1 += 1;
-                            out.push('U');
-                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                            tiles[empty.0 - 1][empty.1] = 16;
-                            empty.0 -= 1;
-                            out.push('L');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                            tiles[empty.0][empty.1 - 1] = 16;
-                            empty.1 -= 1;
-                            out.push('L');
-                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                            tiles[empty.0][empty.1 - 1] = 16;
-                            empty.1 -= 1;
-                            out.push('D');
-                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                            tiles[empty.0 + 1][empty.1] = 16;
-                            empty.0 += 1;
-                        }
-                        out.push('R');
-                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                        tiles[empty.0][empty.1 + 1] = 16;
-                        empty.1 += 1;
-                    }
-                    // a_now = (tar_b.0 + 1, tar_b.1 + 1)になった
-                    // ..
-                    // ba
-                    b_now = (tar_b.0 + 1, tar_b.1);
-                    // 1回回す
-                    // まずinput.n - 2の行に持って行く
-                    if empty.0 < input.n - 2 {
-                        for _ in 0..(input.n - 2 - empty.0) {
-                            out.push('D');
-                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                            tiles[empty.0 + 1][empty.1] = 16;
-                            empty.0 += 1;
-                        }
-                    } else {
-                        for _ in 0..(empty.0 - input.n + 2) {
-                            out.push('U');
-                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                            tiles[empty.0 - 1][empty.1] = 16;
-                            empty.0 -= 1;
-                        }
-                    }
-                    // bの隣に持って行く
-                    for _ in 0..(empty.1 - b_now.1) {
-                        out.push('L');
-                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                        tiles[empty.0][empty.1 - 1] = 16;
-                        empty.1 -= 1;
-                    }
-                    // 回す
-                    out.push('D');
-                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                    tiles[empty.0 + 1][empty.1] = 16;
-                    empty.0 += 1;
-                    out.push('R');
-                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                    tiles[empty.0][empty.1 + 1] = 16;
-                    empty.1 += 1;
-                    return out;
                 }
             }
-            unreachable!();
+            return out;
         }
     }
-    // チェック終わり
     let a_now = get_now(tar_a, fix, input, tiles, tree_tiles);
     let out1 = slide(tar_b, a_now, input, tiles);
     for oi in out1 {
