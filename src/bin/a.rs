@@ -7,7 +7,7 @@
 use itertools::Itertools;
 use permutohedron::LexicalPermutation;
 use proconio::{input, marker::Chars};
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 
 pub type Output = Vec<char>;
 
@@ -1609,7 +1609,7 @@ fn slide2(
                                 empty.0 += 1;
                             }
                             // bの下に持って行く
-                            for _ in 0..(empty.0 - tar_b.0 - 1) {
+                            for _ in 0..(empty.1 - tar_b.1 - 1) {
                                 out.push('L');
                                 tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
                                 tiles[empty.0][empty.1 - 1] = 16;
@@ -3886,11 +3886,20 @@ fn parity_check(input: &Input, tiles: &[Vec<usize>]) -> bool {
             } else {
                 map.entry(16).or_insert(0)
             };
-            if *e == 0 {
-                *e += i * input.n + j;
-            }
+
+            *e = i * input.n + j;
         }
     }
+    // 右下にめっちゃ同じ数あったら大体成功しそう
+    let mut set = HashSet::new();
+    for i in input.n - 3..input.n {
+        for j in input.n - 3..input.n {
+            set.insert(tiles[i][j]);
+        }
+    }
+    // if set.len() < 8 {
+    //     return true;
+    // }
 
     for i in 0..input.n * input.n {
         for j in 0..input.n * input.n {
