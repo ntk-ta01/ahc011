@@ -3897,7 +3897,7 @@ fn parity_check(input: &Input, tiles: &[Vec<usize>]) -> bool {
             set.insert(tiles[i][j]);
         }
     }
-    // if set.len() < 8 {
+    // if set.len() < 9 {
     //     return true;
     // }
 
