@@ -338,10 +338,12 @@ fn slide3x3(input: &Input, tiles: &mut [Vec<usize>], tree_tiles: &mut [Vec<usize
             prev[map[&nv]] = i;
             que.push_back(nv);
             if nv == g {
+                eprintln!("goal");
                 break 'lp;
             }
         }
     }
+    eprintln!("parity check: {}", parity_check(input, tiles));
     // 経路復元
     let mut empty = get_empty(&goal);
     let mut v = g;
@@ -1970,22 +1972,41 @@ fn slide2(
                                 tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
                                 tiles[empty.0][empty.1 - 1] = 16;
                                 empty.1 -= 1;
-                                out.push('D');
-                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                                tiles[empty.0 + 1][empty.1] = 16;
-                                empty.0 += 1;
-                                out.push('R');
-                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                                tiles[empty.0][empty.1 + 1] = 16;
-                                empty.1 += 1;
-                                out.push('R');
-                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                                tiles[empty.0][empty.1 + 1] = 16;
-                                empty.1 += 1;
-                                out.push('U');
-                                tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                                tiles[empty.0 - 1][empty.1] = 16;
-                                empty.0 -= 1;
+                                if a_now.0 < input.n - 1 {
+                                    out.push('D');
+                                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                    tiles[empty.0 + 1][empty.1] = 16;
+                                    empty.0 += 1;
+                                    out.push('R');
+                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                    tiles[empty.0][empty.1 + 1] = 16;
+                                    empty.1 += 1;
+                                    out.push('R');
+                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                    tiles[empty.0][empty.1 + 1] = 16;
+                                    empty.1 += 1;
+                                    out.push('U');
+                                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                    tiles[empty.0 - 1][empty.1] = 16;
+                                    empty.0 -= 1;
+                                } else {
+                                    out.push('U');
+                                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                    tiles[empty.0 - 1][empty.1] = 16;
+                                    empty.0 -= 1;
+                                    out.push('R');
+                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                    tiles[empty.0][empty.1 + 1] = 16;
+                                    empty.1 += 1;
+                                    out.push('R');
+                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                    tiles[empty.0][empty.1 + 1] = 16;
+                                    empty.1 += 1;
+                                    out.push('D');
+                                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                    tiles[empty.0 + 1][empty.1] = 16;
+                                    empty.0 += 1;
+                                }
                             }
                             out.push('L');
                             tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
@@ -2308,28 +2329,47 @@ fn slide2(
                                 tiles[empty.0 - 1][empty.1] = 16;
                                 empty.0 -= 1;
                             }
-                            // 空きマスがa_nowの下に来たので、aを一番下の列行で持って行く
+                            // 空きマスがa_nowの下に来たので、aを一番下の行で持って行く
                             for _ in 0..(input.n - 1 - a_now.0 - 1) {
                                 out.push('U');
                                 tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
                                 tiles[empty.0 - 1][empty.1] = 16;
                                 empty.0 -= 1;
-                                out.push('R');
-                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                                tiles[empty.0][empty.1 + 1] = 16;
-                                empty.1 += 1;
-                                out.push('D');
-                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                                tiles[empty.0 + 1][empty.1] = 16;
-                                empty.0 += 1;
-                                out.push('D');
-                                tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                                tiles[empty.0 + 1][empty.1] = 16;
-                                empty.0 += 1;
-                                out.push('L');
-                                tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                                tiles[empty.0][empty.1 - 1] = 16;
-                                empty.1 -= 1;
+                                if a_now.1 < input.n - 1 {
+                                    out.push('R');
+                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                    tiles[empty.0][empty.1 + 1] = 16;
+                                    empty.1 += 1;
+                                    out.push('D');
+                                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                    tiles[empty.0 + 1][empty.1] = 16;
+                                    empty.0 += 1;
+                                    out.push('D');
+                                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                    tiles[empty.0 + 1][empty.1] = 16;
+                                    empty.0 += 1;
+                                    out.push('L');
+                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                    tiles[empty.0][empty.1 - 1] = 16;
+                                    empty.1 -= 1;
+                                } else {
+                                    out.push('L');
+                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                    tiles[empty.0][empty.1 - 1] = 16;
+                                    empty.1 -= 1;
+                                    out.push('D');
+                                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                    tiles[empty.0 + 1][empty.1] = 16;
+                                    empty.0 += 1;
+                                    out.push('D');
+                                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                    tiles[empty.0 + 1][empty.1] = 16;
+                                    empty.0 += 1;
+                                    out.push('R');
+                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                    tiles[empty.0][empty.1 + 1] = 16;
+                                    empty.1 += 1;
+                                }
                             }
                             out.push('U');
                             tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
@@ -3834,6 +3874,53 @@ fn dfs(
     //     }
     // }
     false
+}
+
+fn parity_check(input: &Input, tiles: &[Vec<usize>]) -> bool {
+    let mut count = 0;
+    let mut map = HashMap::new();
+    for (i, row) in input.tiles.iter().enumerate() {
+        for (j, &t) in row.iter().enumerate() {
+            let e = if t != 0 {
+                map.entry(t).or_insert(0)
+            } else {
+                map.entry(16).or_insert(0)
+            };
+            if *e == 0 {
+                *e += i * input.n + j;
+            }
+        }
+    }
+
+    for i in 0..input.n * input.n {
+        for j in 0..input.n * input.n {
+            if i < j
+                && map[&tiles[i / input.n][i % input.n]] > map[&tiles[j / input.n][j % input.n]]
+            {
+                count += 1;
+            }
+        }
+    }
+    let mut pos1 = (0, 0);
+    for i in 0..input.n {
+        for j in 0..input.n {
+            if input.tiles[i][j] == 16 {
+                pos1.0 = i;
+                pos1.1 = j;
+            }
+        }
+    }
+    let mut pos2 = (0, 0);
+    for i in 0..input.n {
+        for j in 0..input.n {
+            if tiles[i][j] == 16 {
+                pos2.0 = i;
+                pos2.1 = j;
+            }
+        }
+    }
+    let dist = (pos1.0 as i32 - pos2.0 as i32).abs() + (pos1.1 as i32 - pos2.1 as i32).abs();
+    count % 2 == dist % 2
 }
 
 fn parse_input() -> Input {
