@@ -58,10 +58,18 @@ fn main() {
         }
         2 => {
             // 左下に置く
-            now_tiles[input.n - 2][0] = 2;
-            tile_count[2] -= 1;
-            if now_tiles[input.n - 3][0] == 0 {
+            if tile_count[2] > 0
+                && tile_count[4] > 0
+                && now_tiles[input.n - 3][0] == 0
+                && now_tiles[input.n - 1][1] == 0
+            {
+                now_tiles[input.n - 2][0] = 2;
+                tile_count[2] -= 1;
                 next_poses.push((input.n - 3, 0));
+
+                now_tiles[input.n - 1][0] = 4;
+                tile_count[4] -= 1;
+                next_poses.push((input.n - 1, 1));
             }
         }
         4 => {}
@@ -937,7 +945,7 @@ fn slide2(
                                 tiles[empty.0][empty.1 + 1] = 16;
                                 empty.1 += 1;
                             }
-                            for _ in 0..(tar_b.0 + 1 - empty.0) {
+                            for _ in 0..(empty.0 - tar_b.0 - 1) {
                                 out.push('U');
                                 tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
                                 tiles[empty.0 - 1][empty.1] = 16;
@@ -1440,7 +1448,7 @@ fn slide2(
                                 tiles[empty.0 + 1][empty.1] = 16;
                                 empty.0 += 1;
                             }
-                            for _ in 0..(tar_b.1 + 1 - empty.1) {
+                            for _ in 0..(empty.1 - tar_b.1 - 1) {
                                 out.push('L');
                                 tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
                                 tiles[empty.0][empty.1 - 1] = 16;
