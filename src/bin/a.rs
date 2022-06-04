@@ -53,9 +53,9 @@ fn main() {
             eprintln!();
         }
     }
-    // 見つけた木となるような操作列の構築
-    let out = construct(&input, &mut now_tiles);
-    println!("{}", out.iter().take(input.t).join(""));
+    // 見つけた木となるような操作列の構築 もdfsの中でやる↑
+    // let out = construct(&input, &mut now_tiles);
+    // println!("{}", out.iter().take(input.t).join(""));
 }
 
 fn get_tile_is(input: &Input) -> Vec<Vec<Vec<usize>>> {
@@ -144,7 +144,7 @@ fn get_now(
     unreachable!("not found: now:(");
 }
 
-fn construct(input: &Input, tree_tiles: &mut [Vec<usize>]) -> Output {
+fn construct(input: &Input, tree_tiles: &mut [Vec<usize>]) -> Option<Output> {
     // inputのタイルと木のタイルで番号付けを行う
     // スライディングパズルを解く
     let mut tiles = input.tiles.clone();
@@ -215,16 +215,23 @@ fn construct(input: &Input, tree_tiles: &mut [Vec<usize>]) -> Output {
         }
     }
     // 3*3を完成させる
-    let out_i = slide3x3(input, &mut tiles, tree_tiles);
-    for oi in out_i {
-        out.push(oi);
+    if let Some(out_i) = slide3x3(input, &mut tiles, tree_tiles) {
+        for oi in out_i {
+            out.push(oi);
+        }
+    } else {
+        return None;
     }
     // 3x3でtilesを動かしてないのでここで出力しても一見そろってない
     // が、goalしていたらoutは揃っている
-    out
+    Some(out)
 }
 
-fn slide3x3(input: &Input, tiles: &mut [Vec<usize>], tree_tiles: &mut [Vec<usize>]) -> Output {
+fn slide3x3(
+    input: &Input,
+    tiles: &mut [Vec<usize>],
+    tree_tiles: &mut [Vec<usize>],
+) -> Option<Output> {
     let mut out = vec![];
 
     let mut tiles3x3 = vec![];
@@ -238,16 +245,9 @@ fn slide3x3(input: &Input, tiles: &mut [Vec<usize>], tree_tiles: &mut [Vec<usize
         }
     }
 
-    eprintln!();
-    for &t in tiles3x3.iter() {
-        eprint!("{:2} ", t);
+    if !parity_check(input, &tiles3x3, tree_tiles) {
+        return None;
     }
-    eprintln!();
-
-    eprintln!(
-        "parity check: {}",
-        parity_check(input, &tiles3x3, &tree_tiles)
-    );
 
     let mut goal = vec![];
     for i in 0..3 {
@@ -324,7 +324,7 @@ fn slide3x3(input: &Input, tiles: &mut [Vec<usize>], tree_tiles: &mut [Vec<usize
     let s = tiles2num(&tiles3x3);
     let g = tiles2num(&goal);
     if s == g {
-        return out;
+        return Some(out);
     }
     const N: usize = 68719476736;
     dist[map[&s]] = 0;
@@ -349,7 +349,7 @@ fn slide3x3(input: &Input, tiles: &mut [Vec<usize>], tree_tiles: &mut [Vec<usize
             prev[map[&nv]] = i;
             que.push_back(nv);
             if nv == g {
-                eprintln!("goal");
+                // eprintln!("goal");
                 break 'lp;
             }
         }
@@ -369,7 +369,7 @@ fn slide3x3(input: &Input, tiles: &mut [Vec<usize>], tree_tiles: &mut [Vec<usize
         empty = (ni, nj);
     }
     out.reverse();
-    out
+    Some(out)
 }
 
 fn slide2(
@@ -4045,7 +4045,17 @@ fn dfs(
                 now_tiles[pos.0][pos.1] = tile_i;
                 tile_count[tile_i] -= 1;
                 if tile_count.iter().skip(1).sum::<i32>() == 0 {
-                    return true;
+                    let mut tree_tiles = vec![vec![0; input.n]; input.n];
+                    for (i, row) in now_tiles.iter().enumerate() {
+                        for (j, t) in row.iter().enumerate() {
+                            tree_tiles[i][j] = *t;
+                        }
+                    }
+                    if let Some(out) = construct(input, &mut tree_tiles) {
+                        println!("{}", out.iter().take(input.t).join(""));
+                        return true;
+                    }
+                    // parity checkに失敗したらNoneが返る
                 }
                 if (can_empty_space || open_count == 0 && can_empty_space2)
                     && is_empty_space(input, now_tiles)
