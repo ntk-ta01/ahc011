@@ -13,7 +13,7 @@ pub type Output = Vec<char>;
 
 pub const DIJ: [(usize, usize); 4] = [(0, !0), (!0, 0), (0, 1), (1, 0)];
 pub const DIR: [char; 4] = ['L', 'U', 'R', 'D'];
-const TIMELIMIT: f64 = 2.1;
+const TIMELIMIT: f64 = 1.9;
 
 pub struct Input {
     pub n: usize,
@@ -50,6 +50,7 @@ fn main() {
     if fix_tile_i == 15 {
         for j in (2..input.n - 1).rev() {
             for i in 1..input.n - 1 {
+                eprintln!("(i, j), ({} {})", i, j);
                 if TIMELIMIT < timer.get_time() {
                     println!();
                     return;
@@ -77,7 +78,7 @@ fn main() {
                     &tile_is,
                     &mut count,
                 ) {
-                    // eprintln!("count: {}", count);
+                    eprintln!("count: {}", count);
                     // for row in now_tiles.iter() {
                     //     for t in row.iter() {
                     //         eprint!("{:2} ", t);
@@ -91,6 +92,7 @@ fn main() {
     } else {
         for j in (2..input.n).rev() {
             for i in 0..input.n {
+                eprintln!("(i, j), ({} {})", i, j);
                 if TIMELIMIT < timer.get_time() {
                     println!();
                     return;
@@ -155,7 +157,7 @@ fn main() {
                     &tile_is,
                     &mut count,
                 ) {
-                    // eprintln!("count: {}", count);
+                    eprintln!("count: {}", count);
                     // for row in now_tiles.iter() {
                     //     for t in row.iter() {
                     //         eprint!("{:2} ", t);
@@ -4088,7 +4090,7 @@ fn dfs(
     tile_is: &[Vec<Vec<usize>>],
     count: &mut usize,
 ) -> bool {
-    if *count >= 1_500_000 {
+    if *count >= 1_150_000 {
         return false;
     }
     // 今のposに置くタイルを決める
