@@ -22,7 +22,7 @@ pub struct Input {
 fn main() {
     let input = parse_input();
     // 頂点数N^2 - 1の木を見つける
-    let mut tile_count = {
+    let tile_count = {
         let mut count = vec![0; 16];
         for row in input.tiles.iter() {
             for t in row.iter() {
@@ -31,66 +31,58 @@ fn main() {
         }
         count
     };
-    let mut now_tiles = vec![vec![0; input.n]; input.n];
-    now_tiles[input.n - 1][input.n - 1] = 16;
-    let mut next_poses = vec![];
-    let tile_is = get_tile_is(&input);
-    let mut count = 0;
-    // タイルを事前に良い感じに置いておく
-    // マンハッタン距離の合計の小さいとかも加味した方がよさそう
-    let mut max = 0;
-    let mut max_i = 0;
-    for i in 0..4 {
-        if max < tile_count[1 << i] {
-            max = tile_count[1 << i];
-            max_i = 1 << i;
-        }
-    }
-    eprintln!("{}", max_i);
-    match max_i {
-        1 => {
-            // 右上に置く
-            now_tiles[0][input.n - 1] = 1;
-            tile_count[1] -= 1;
-            if now_tiles[0][input.n - 2] == 0 {
-                next_poses.push((input.n - 1, 1));
+    let fix_tile_i = if tile_count[15] > 0 {
+        15
+    } else {
+        let mut max = 0;
+        let mut max_i = 0;
+        for i in [7, 11, 13, 14] {
+            if tile_count[i] > max {
+                max = tile_count[i];
+                max_i = i;
             }
         }
-        2 => {
-            // 左下に置く
-            if tile_count[2] > 0
-                && tile_count[4] > 0
-                && now_tiles[input.n - 3][0] == 0
-                && now_tiles[input.n - 1][1] == 0
-            {
-                now_tiles[input.n - 2][0] = 2;
-                tile_count[2] -= 1;
-                next_poses.push((input.n - 3, 0));
+        max_i
+    };
+    if fix_tile_i == 15 {
+        for j in (2..input.n - 1).rev() {
+            for i in 1..input.n - 1 {
+                if (i + j) & 1 == 1 {
+                    continue;
+                }
+                let mut tile_count = tile_count.clone();
+                let mut now_tiles = vec![vec![0; input.n]; input.n];
+                now_tiles[input.n - 1][input.n - 1] = 16;
+                let mut next_poses = vec![];
+                let tile_is = get_tile_is(&input);
+                let mut count = 0;
 
-                now_tiles[input.n - 1][0] = 4;
-                tile_count[4] -= 1;
-                next_poses.push((input.n - 1, 1));
+                now_tiles[i][j] = 15;
+                tile_count[15] -= 1;
+                next_poses.push((i, j - 1));
+                next_poses.push((i - 1, j));
+                next_poses.push((i, j + 1));
+                next_poses.push((i + 1, j));
+
+                if dfs(
+                    (0, 0),
+                    &input,
+                    &mut tile_count,
+                    &mut now_tiles,
+                    &mut next_poses,
+                    &tile_is,
+                    &mut count,
+                ) {
+                    eprintln!("count: {}", count);
+                    for row in now_tiles.iter() {
+                        for t in row.iter() {
+                            eprint!("{:2} ", t);
+                        }
+                        eprintln!();
+                    }
+                    break;
+                }
             }
-        }
-        4 => {}
-        8 => {}
-        _ => unreachable!(),
-    }
-    if dfs(
-        (0, 0),
-        &input,
-        &mut tile_count,
-        &mut now_tiles,
-        &mut next_poses,
-        &tile_is,
-        &mut count,
-    ) {
-        eprintln!("count: {}", count);
-        for row in now_tiles.iter() {
-            for t in row.iter() {
-                eprint!("{:2} ", t);
-            }
-            eprintln!();
         }
     }
     // 見つけた木となるような操作列の構築 もdfsの中でやる↑
@@ -4014,6 +4006,9 @@ fn dfs(
     tile_is: &[Vec<Vec<usize>>],
     count: &mut usize,
 ) -> bool {
+    if *count >= 4_000_000 {
+        return false;
+    }
     // 今のposに置くタイルを決める
     for &tile_i in tile_is[pos.0][pos.1].iter() {
         if tile_count[tile_i] == 0 {
@@ -4169,9 +4164,10 @@ fn dfs(
         }
     }
     *count += 1;
-    // if *count <= 1000 && *count % 100 == 0 {
+    // if *count <= 100000 && *count % 20000 == 0 {
     //     eprintln!("count: {}", count);
     //     eprintln!("{:?}", tile_count);
+    //     eprintln!("{} {}", input.n, input.t);
     //     for row in now_tiles.iter() {
     //         for t in row.iter() {
     //             if *t == 16 {
