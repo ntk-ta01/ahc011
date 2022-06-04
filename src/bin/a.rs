@@ -8,13 +8,16 @@
 use itertools::Itertools;
 use permutohedron::LexicalPermutation;
 use proconio::{input, marker::Chars};
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::{
+    collections::{HashMap, HashSet, VecDeque},
+    process::exit,
+};
 
 pub type Output = Vec<char>;
 
 pub const DIJ: [(usize, usize); 4] = [(0, !0), (!0, 0), (0, 1), (1, 0)];
 pub const DIR: [char; 4] = ['L', 'U', 'R', 'D'];
-const TIMELIMIT: f64 = 1.7;
+const TIMELIMIT: f64 = 2.2;
 
 pub struct Input {
     pub n: usize,
@@ -4097,8 +4100,9 @@ fn dfs(
     if *count >= 1_050_000 {
         return false;
     }
-    if *count % 1000 == 0 && TIMELIMIT < timer.get_time() {
-        return false;
+    if *count % 100 == 0 && TIMELIMIT < timer.get_time() {
+        println!();
+        exit(0);
     }
     // 今のposに置くタイルを決める
     for &tile_i in tile_is[pos.0][pos.1].iter() {
@@ -4111,6 +4115,7 @@ fn dfs(
         let mut can_empty_space2 = false;
         let mut is_place = true;
         let mut dij = vec![];
+        let mut connect_count = 0;
         for (d, (di, dj)) in DIJ.iter().enumerate() {
             // L, U, R, D
             let i2 = pos.0 + *di;
@@ -4124,6 +4129,8 @@ fn dfs(
                     if now_tiles[i2][j2] == 0 {
                         open_count += 1;
                         dij.push((i2, j2));
+                    } else {
+                        connect_count += 1;
                     }
                 } else {
                     // このタイルは置けない
@@ -4170,7 +4177,13 @@ fn dfs(
             if dij.is_empty() {
                 now_tiles[pos.0][pos.1] = tile_i;
                 tile_count[tile_i] -= 1;
-                if tile_count.iter().skip(1).sum::<i32>() == 0 {
+                if 1 < connect_count && find_cycle(pos, input, now_tiles) {
+                    now_tiles[pos.0][pos.1] = 0;
+                    tile_count[tile_i] += 1;
+                    continue;
+                }
+                if tile_count.iter().skip(1).sum::<i32>() == 0 && !find_cycle(pos, input, now_tiles)
+                {
                     let mut tree_tiles = vec![vec![0; input.n]; input.n];
                     for (i, row) in now_tiles.iter().enumerate() {
                         for (j, t) in row.iter().enumerate() {
@@ -4225,16 +4238,27 @@ fn dfs(
                 tile_count[tile_i] += 1;
             } else {
                 next_poses.extend_from_slice(&dij);
-                for &(i2, j2) in dij.iter() {
-                    now_tiles[pos.0][pos.1] = tile_i;
-                    tile_count[tile_i] -= 1;
-                    if (can_empty_space || open_count == 0 && can_empty_space2)
-                        && is_empty_space(input, now_tiles)
-                    {
-                        now_tiles[pos.0][pos.1] = 0;
-                        tile_count[tile_i] += 1;
-                        continue;
+                now_tiles[pos.0][pos.1] = tile_i;
+                tile_count[tile_i] -= 1;
+                if (can_empty_space || open_count == 0 && can_empty_space2)
+                    && is_empty_space(input, now_tiles)
+                {
+                    now_tiles[pos.0][pos.1] = 0;
+                    tile_count[tile_i] += 1;
+                    for _ in 0..dij.len() {
+                        next_poses.pop();
                     }
+                    continue;
+                }
+                if 1 < connect_count && find_cycle(pos, input, now_tiles) {
+                    now_tiles[pos.0][pos.1] = 0;
+                    tile_count[tile_i] += 1;
+                    for _ in 0..dij.len() {
+                        next_poses.pop();
+                    }
+                    continue;
+                }
+                for &(i2, j2) in dij.iter() {
                     if dfs(
                         (i2, j2),
                         input,
@@ -4247,9 +4271,9 @@ fn dfs(
                     ) {
                         return true;
                     }
-                    now_tiles[pos.0][pos.1] = 0;
-                    tile_count[tile_i] += 1;
                 }
+                now_tiles[pos.0][pos.1] = 0;
+                tile_count[tile_i] += 1;
                 for _ in 0..dij.len() {
                     next_poses.pop();
                 }
@@ -4272,6 +4296,39 @@ fn dfs(
     //         eprintln!();
     //     }
     // }
+    false
+}
+
+fn find_cycle(pos: (usize, usize), input: &Input, tiles: &[Vec<usize>]) -> bool {
+    // posからbfsして2回訪れる場所があればcycleあり
+    let mut que = VecDeque::new();
+    let mut visited = vec![vec![false; input.n]; input.n];
+    visited[pos.0][pos.1] = true;
+    que.push_back((pos, 4));
+    while !que.is_empty() {
+        let (v, prev_d) = que.pop_front().unwrap();
+        for (d, (di, dj)) in DIJ.iter().enumerate() {
+            let ni = v.0 + *di;
+            let nj = v.1 + *dj;
+            if ni >= input.n || nj >= input.n {
+                continue;
+            }
+            if d ^ 2 == prev_d {
+                // 来た方向に戻るのを禁止
+                continue;
+            }
+            if tiles[v.0][v.1] & (1 << d) == 0 {
+                // tileが開いてない方向には進めない
+                continue;
+            }
+            if visited[ni][nj] {
+                // 閉路あり
+                return true;
+            }
+            visited[ni][nj] = true;
+            que.push_back(((ni, nj), d));
+        }
+    }
     false
 }
 
