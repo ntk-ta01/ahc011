@@ -238,6 +238,17 @@ fn slide3x3(input: &Input, tiles: &mut [Vec<usize>], tree_tiles: &mut [Vec<usize
         }
     }
 
+    eprintln!();
+    for &t in tiles3x3.iter() {
+        eprint!("{:2} ", t);
+    }
+    eprintln!();
+
+    eprintln!(
+        "parity check: {}",
+        parity_check(input, &tiles3x3, &tree_tiles)
+    );
+
     let mut goal = vec![];
     for i in 0..3 {
         for j in 0..3 {
@@ -343,7 +354,7 @@ fn slide3x3(input: &Input, tiles: &mut [Vec<usize>], tree_tiles: &mut [Vec<usize
             }
         }
     }
-    eprintln!("parity check: {}", parity_check(input, tiles));
+
     // 経路復元
     let mut empty = get_empty(&goal);
     let mut v = g;
@@ -368,7 +379,7 @@ fn slide2(
     input: &Input,
     tiles: &mut [Vec<usize>],
     tree_tiles: &mut [Vec<usize>],
-) -> Vec<char> {
+) -> Output {
     let mut out: Output = vec![];
     let start = tar_b.0.min(tar_b.1);
     let mut a_now = get_now(tar_a, fix, input, tiles, tree_tiles);
@@ -2823,7 +2834,7 @@ fn slide(
     now: (usize, usize),
     input: &Input,
     tiles: &mut [Vec<usize>],
-) -> Vec<char> {
+) -> Output {
     let mut now = now;
     // 完成させたタイルには触れない
     // 完成したタイル：自分よりtar_iが小さいか、tar_iが同じだがtar_jが小さいか
@@ -4111,54 +4122,51 @@ fn dfs(
     false
 }
 
-fn parity_check(input: &Input, tiles: &[Vec<usize>]) -> bool {
-    let mut count = 0;
-    let mut map = HashMap::new();
-    for (i, row) in input.tiles.iter().enumerate() {
-        for (j, &t) in row.iter().enumerate() {
-            let e = if t != 0 {
-                map.entry(t).or_insert(0)
-            } else {
-                map.entry(16).or_insert(0)
-            };
-            if *e == 0 {
-                *e = i * input.n + j;
-            }
-        }
-    }
+fn parity_check(input: &Input, tiles: &[usize], tree_tiles: &[Vec<usize>]) -> bool {
     // 右下にめっちゃ同じ数あったら大体成功しそう
     let mut set = HashSet::new();
-    for i in input.n - 3..input.n {
-        for j in input.n - 3..input.n {
-            set.insert(tiles[i][j]);
-        }
+    for &t in tiles.iter() {
+        set.insert(t);
     }
     if set.len() < 9 {
         return true;
     }
 
-    for i in 0..input.n * input.n {
-        for j in 0..input.n * input.n {
-            if i < j
-                && map[&tiles[i / input.n][i % input.n]] > map[&tiles[j / input.n][j % input.n]]
-            {
+    let mut count = 0;
+    let mut map = HashMap::new();
+    for i in input.n - 3..input.n {
+        for j in input.n - 3..input.n {
+            let e = if tree_tiles[i][j] != 16 {
+                map.entry(tree_tiles[i][j]).or_insert(0)
+            } else {
+                map.entry(0).or_insert(0)
+            };
+            if *e == 0 {
+                *e = (i + 3 - input.n) * 3 + (j + 3 - input.n);
+            }
+        }
+    }
+
+    for i in 0..3 * 3 {
+        for j in 0..3 * 3 {
+            if i < j && map[&tiles[i]] > map[&tiles[j]] {
                 count += 1;
             }
         }
     }
     let mut pos1 = (0, 0);
-    for i in 0..input.n {
-        for j in 0..input.n {
-            if input.tiles[i][j] == 16 {
-                pos1.0 = i;
-                pos1.1 = j;
+    for i in input.n - 3..input.n {
+        for j in input.n - 3..input.n {
+            if tree_tiles[i][j] == 16 {
+                pos1.0 = i + 3 - input.n;
+                pos1.1 = j + 3 - input.n;
             }
         }
     }
     let mut pos2 = (0, 0);
-    for i in 0..input.n {
-        for j in 0..input.n {
-            if tiles[i][j] == 16 {
+    for i in 0..3 {
+        for j in 0..3 {
+            if tiles[i * 3 + j] == 0 {
                 pos2.0 = i;
                 pos2.1 = j;
             }
