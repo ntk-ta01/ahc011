@@ -13,7 +13,7 @@ pub type Output = Vec<char>;
 
 pub const DIJ: [(usize, usize); 4] = [(0, !0), (!0, 0), (0, 1), (1, 0)];
 pub const DIR: [char; 4] = ['L', 'U', 'R', 'D'];
-const TIMELIMIT: f64 = 2.7;
+const TIMELIMIT: f64 = 2.1;
 
 pub struct Input {
     pub n: usize,
@@ -33,12 +33,13 @@ fn main() {
         }
         count
     };
+    let arr = [7, 11, 13, 14];
     let fix_tile_i = if tile_count[15] > 0 {
         15
     } else {
         let mut max = 0;
         let mut max_i = 0;
-        for i in [7, 11, 13, 14] {
+        for &i in arr.iter() {
             if tile_count[i] > max {
                 max = tile_count[i];
                 max_i = i;
