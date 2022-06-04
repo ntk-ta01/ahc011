@@ -14,7 +14,7 @@ pub type Output = Vec<char>;
 
 pub const DIJ: [(usize, usize); 4] = [(0, !0), (!0, 0), (0, 1), (1, 0)];
 pub const DIR: [char; 4] = ['L', 'U', 'R', 'D'];
-const TIMELIMIT: f64 = 1.9;
+const TIMELIMIT: f64 = 1.7;
 
 pub struct Input {
     pub n: usize,
