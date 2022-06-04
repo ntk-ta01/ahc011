@@ -13,6 +13,7 @@ pub type Output = Vec<char>;
 
 pub const DIJ: [(usize, usize); 4] = [(0, !0), (!0, 0), (0, 1), (1, 0)];
 pub const DIR: [char; 4] = ['L', 'U', 'R', 'D'];
+const TIMELIMIT: f64 = 2.7;
 
 pub struct Input {
     pub n: usize,
@@ -20,6 +21,7 @@ pub struct Input {
     pub tiles: Vec<Vec<usize>>,
 }
 fn main() {
+    let timer = Timer::new();
     let input = parse_input();
     // 頂点数N^2 - 1の木を見つける
     let tile_count = {
@@ -47,8 +49,9 @@ fn main() {
     if fix_tile_i == 15 {
         for j in (2..input.n - 1).rev() {
             for i in 1..input.n - 1 {
-                if (i + j) & 1 == 1 {
-                    continue;
+                if TIMELIMIT < timer.get_time() {
+                    println!();
+                    return;
                 }
                 let mut tile_count = tile_count.clone();
                 let mut now_tiles = vec![vec![0; input.n]; input.n];
@@ -73,14 +76,92 @@ fn main() {
                     &tile_is,
                     &mut count,
                 ) {
-                    eprintln!("count: {}", count);
-                    for row in now_tiles.iter() {
-                        for t in row.iter() {
-                            eprint!("{:2} ", t);
+                    // eprintln!("count: {}", count);
+                    // for row in now_tiles.iter() {
+                    //     for t in row.iter() {
+                    //         eprint!("{:2} ", t);
+                    //     }
+                    //     eprintln!();
+                    // }
+                    return;
+                }
+            }
+        }
+    } else {
+        for j in (2..input.n).rev() {
+            for i in 0..input.n {
+                if TIMELIMIT < timer.get_time() {
+                    println!();
+                    return;
+                }
+                let mut tile_count = tile_count.clone();
+                let mut now_tiles = vec![vec![0; input.n]; input.n];
+                now_tiles[input.n - 1][input.n - 1] = 16;
+                let mut next_poses = vec![];
+                let tile_is = get_tile_is(&input);
+                let mut count = 0;
+
+                match fix_tile_i {
+                    7 => {
+                        if i == 0 || j == input.n - 1 {
+                            continue;
                         }
-                        eprintln!();
+                        now_tiles[i][j] = 7;
+                        tile_count[7] -= 1;
+                        next_poses.push((i, j - 1));
+                        next_poses.push((i - 1, j));
+                        next_poses.push((i, j + 1));
                     }
-                    break;
+                    11 => {
+                        if i == 0 || i == input.n - 1 {
+                            continue;
+                        }
+                        now_tiles[i][j] = 11;
+                        tile_count[11] -= 1;
+                        next_poses.push((i, j - 1));
+                        next_poses.push((i - 1, j));
+                        next_poses.push((i + 1, j));
+                    }
+                    13 => {
+                        if i == input.n - 1 || j == input.n - 1 {
+                            continue;
+                        }
+                        now_tiles[i][j] = 13;
+                        tile_count[13] -= 1;
+                        next_poses.push((i, j - 1));
+                        next_poses.push((i, j + 1));
+                        next_poses.push((i + 1, j));
+                    }
+                    14 => {
+                        if i == 0 || i == input.n - 1 || j == input.n - 1 {
+                            continue;
+                        }
+                        now_tiles[i][j] = 14;
+                        tile_count[14] -= 1;
+                        next_poses.push((i - 1, j));
+                        next_poses.push((i, j + 1));
+                        next_poses.push((i + 1, j));
+                    }
+                    _ => unreachable!(),
+                }
+
+                if dfs(
+                    (0, 0),
+                    &input,
+                    &mut tile_count,
+                    &mut now_tiles,
+                    &mut next_poses,
+                    &tile_is,
+                    &mut count,
+                ) {
+                    // eprintln!("count: {}", count);
+                    // for row in now_tiles.iter() {
+                    //     for t in row.iter() {
+                    //         eprint!("{:2} ", t);
+                    //     }
+                    //     eprintln!();
+                    // }
+                    return;
                 }
             }
         }
@@ -4006,7 +4087,7 @@ fn dfs(
     tile_is: &[Vec<Vec<usize>>],
     count: &mut usize,
 ) -> bool {
-    if *count >= 4_000_000 {
+    if *count >= 1_500_000 {
         return false;
     }
     // 今のposに置くタイルを決める
@@ -4251,4 +4332,31 @@ fn parse_input() -> Input {
         })
         .collect();
     Input { n, t, tiles }
+}
+
+pub fn get_time() -> f64 {
+    let t = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap();
+    t.as_secs() as f64 + t.subsec_nanos() as f64 * 1e-9
+}
+
+struct Timer {
+    start_time: f64,
+}
+
+impl Timer {
+    fn new() -> Timer {
+        Timer {
+            start_time: get_time(),
+        }
+    }
+
+    fn get_time(&self) -> f64 {
+        get_time() - self.start_time
+    }
+
+    // fn reset(&mut self) {
+    //     self.start_time = get_time();
+    // }
 }
