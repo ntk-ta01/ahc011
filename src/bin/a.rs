@@ -83,7 +83,7 @@ fn main() {
                     &mut count,
                     &timer,
                 ) {
-                    // eprintln!("count: {}", count);
+                    eprintln!("count: {}", count);
                     // for row in now_tiles.iter() {
                     //     for t in row.iter() {
                     //         eprint!("{:2} ", t);
@@ -163,7 +163,7 @@ fn main() {
                     &mut count,
                     &timer,
                 ) {
-                    // eprintln!("count: {}", count);
+                    eprintln!("count: {}", count);
                     // for row in now_tiles.iter() {
                     //     for t in row.iter() {
                     //         eprint!("{:2} ", t);
@@ -4097,7 +4097,7 @@ fn dfs(
     count: &mut usize,
     timer: &Timer,
 ) -> bool {
-    if *count >= 1_250_000 {
+    if *count >= 1_750_000 {
         return false;
     }
     if *count % 100 == 0 && TIMELIMIT < timer.get_time() {
@@ -4217,6 +4217,11 @@ fn dfs(
                     tile_count[tile_i] += 1;
                     continue;
                 }
+                // if !is_connected(pos, input, now_tiles) {
+                //     now_tiles[pos.0][pos.1] = 0;
+                //     tile_count[tile_i] += 1;
+                //     continue;
+                // }
                 for ni in (0..next_poses.len()).rev() {
                     if now_tiles[next_poses[ni].0][next_poses[ni].1] != 0 {
                         continue;
@@ -4281,7 +4286,7 @@ fn dfs(
         }
     }
     *count += 1;
-    // if *count <= 100000 && *count % 20000 == 0 {
+    // if *count <= 1000000 && *count % 100000 == 0 {
     //     eprintln!("count: {}", count);
     //     eprintln!("{:?}", tile_count);
     //     eprintln!("{} {}", input.n, input.t);
@@ -4297,6 +4302,45 @@ fn dfs(
     //     }
     // }
     false
+}
+
+#[allow(dead_code)]
+fn is_connected(pos: (usize, usize), input: &Input, tiles: &[Vec<usize>]) -> bool {
+    // posからBFSして今置いてあるタイルに全部行けるかチェック
+    let mut que = VecDeque::new();
+    let mut visited = vec![vec![false; input.n]; input.n];
+    visited[pos.0][pos.1] = true;
+    que.push_back(pos);
+    while !que.is_empty() {
+        let v = que.pop_front().unwrap();
+        for (d, (di, dj)) in DIJ.iter().enumerate() {
+            let ni = v.0 + *di;
+            let nj = v.1 + *dj;
+            if tiles[v.0][v.1] & (1 << d) == 0 {
+                // tileが開いてない方向には進めない
+                continue;
+            }
+            if ni >= input.n || nj >= input.n {
+                continue;
+            }
+            if visited[ni][nj] {
+                continue;
+            }
+            if tiles[ni][nj] == 0 || tiles[ni][nj] == 16 {
+                continue;
+            }
+            visited[ni][nj] = true;
+            que.push_back((ni, nj));
+        }
+    }
+    for i in 0..input.n {
+        for j in 0..input.n {
+            if tiles[i][j] != 0 && tiles[i][j] != 16 && !visited[i][j] {
+                return false;
+            }
+        }
+    }
+    true
 }
 
 fn find_cycle(pos: (usize, usize), input: &Input, tiles: &[Vec<usize>]) -> bool {
