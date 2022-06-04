@@ -8,6 +8,7 @@
 use itertools::Itertools;
 use permutohedron::LexicalPermutation;
 use proconio::{input, marker::Chars};
+use rand::prelude::*;
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     process::exit,
@@ -26,6 +27,7 @@ pub struct Input {
 }
 fn main() {
     let timer = Timer::new();
+    let mut rng = rand_chacha::ChaCha20Rng::seed_from_u64(93216000);
     let input = parse_input();
     // 頂点数N^2 - 1の木を見つける
     let tile_count = {
@@ -37,145 +39,134 @@ fn main() {
         }
         count
     };
-    let arr = [7, 11, 13, 14];
-    let fix_tile_i = if tile_count[15] > 0 {
-        15
-    } else {
-        let mut max = 0;
-        let mut max_i = 0;
-        for &i in arr.iter() {
-            if tile_count[i] > max {
-                max = tile_count[i];
-                max_i = i;
+    let arr = [7, 11, 13, 14, 15];
+    loop {
+        if TIMELIMIT < timer.get_time() {
+            println!();
+            return;
+        }
+        let mut tile_count = tile_count.clone();
+        let mut now_tiles = vec![vec![0; input.n]; input.n];
+        now_tiles[input.n - 1][input.n - 1] = 16;
+        let mut next_poses = vec![];
+        let tile_is = get_tile_is(&input);
+        let mut count = 0;
+
+        for _ in 0..(input.n - 4) * 2 {
+            let fix_tile_i = arr[rng.gen_range(0, 5)];
+            let i = rng.gen_range(0, input.n);
+            let j = rng.gen_range(2, input.n);
+            // eprintln!("(i, j), ({} {})", i, j);
+            if i == input.n - 1 && j == input.n - 1 {
+                continue;
+            }
+            match fix_tile_i {
+                7 => {
+                    if i == 0 || j == input.n - 1 {
+                        continue;
+                    }
+                    if tile_count[7] == 0 {
+                        continue;
+                    }
+                    if now_tiles[i][j] != 0 {
+                        continue;
+                    }
+                    now_tiles[i][j] = 7;
+                    tile_count[7] -= 1;
+                    next_poses.push((i, j - 1));
+                    next_poses.push((i - 1, j));
+                    next_poses.push((i, j + 1));
+                }
+                11 => {
+                    if i == 0 || i == input.n - 1 {
+                        continue;
+                    }
+                    if tile_count[11] == 0 {
+                        continue;
+                    }
+                    if now_tiles[i][j] != 0 {
+                        continue;
+                    }
+                    now_tiles[i][j] = 11;
+                    tile_count[11] -= 1;
+                    next_poses.push((i, j - 1));
+                    next_poses.push((i - 1, j));
+                    next_poses.push((i + 1, j));
+                }
+                13 => {
+                    if i == input.n - 1 || j == input.n - 1 {
+                        continue;
+                    }
+                    if tile_count[13] == 0 {
+                        continue;
+                    }
+                    if now_tiles[i][j] != 0 {
+                        continue;
+                    }
+                    now_tiles[i][j] = 13;
+                    tile_count[13] -= 1;
+                    next_poses.push((i, j - 1));
+                    next_poses.push((i, j + 1));
+                    next_poses.push((i + 1, j));
+                }
+                14 => {
+                    if i == 0 || i == input.n - 1 || j == input.n - 1 {
+                        continue;
+                    }
+                    if tile_count[14] == 0 {
+                        continue;
+                    }
+                    if now_tiles[i][j] != 0 {
+                        continue;
+                    }
+                    now_tiles[i][j] = 14;
+                    tile_count[14] -= 1;
+                    next_poses.push((i - 1, j));
+                    next_poses.push((i, j + 1));
+                    next_poses.push((i + 1, j));
+                }
+                15 => {
+                    if i == 0 || i == input.n - 1 || j == 0 || j == input.n - 1 {
+                        continue;
+                    }
+                    if tile_count[15] == 0 {
+                        continue;
+                    }
+                    if now_tiles[i][j] != 0 {
+                        continue;
+                    }
+                    now_tiles[i][j] = 15;
+                    tile_count[15] -= 1;
+                    next_poses.push((i, j - 1));
+                    next_poses.push((i - 1, j));
+                    next_poses.push((i, j + 1));
+                    next_poses.push((i + 1, j));
+                }
+                _ => unreachable!(),
             }
         }
-        max_i
-    };
-    if fix_tile_i == 15 {
-        for j in (2..input.n - 1).rev() {
-            for i in 1..input.n - 1 {
-                // eprintln!("(i, j), ({} {})", i, j);
-                if TIMELIMIT < timer.get_time() {
-                    println!();
-                    return;
-                }
-                let mut tile_count = tile_count.clone();
-                let mut now_tiles = vec![vec![0; input.n]; input.n];
-                now_tiles[input.n - 1][input.n - 1] = 16;
-                let mut next_poses = vec![];
-                let tile_is = get_tile_is(&input);
-                let mut count = 0;
 
-                now_tiles[i][j] = 15;
-                tile_count[15] -= 1;
-                next_poses.push((i, j - 1));
-                next_poses.push((i - 1, j));
-                next_poses.push((i, j + 1));
-                next_poses.push((i + 1, j));
-
-                if dfs(
-                    (0, 0),
-                    &input,
-                    &mut tile_count,
-                    &mut now_tiles,
-                    &mut next_poses,
-                    &tile_is,
-                    &mut count,
-                    &timer,
-                ) {
-                    eprintln!("count: {}", count);
-                    // for row in now_tiles.iter() {
-                    //     for t in row.iter() {
-                    //         eprint!("{:2} ", t);
-                    //     }
-                    //     eprintln!();
-                    // }
-                    return;
-                }
-            }
-        }
-    } else {
-        for j in (2..input.n).rev() {
-            for i in 0..input.n {
-                // eprintln!("(i, j), ({} {})", i, j);
-                if TIMELIMIT < timer.get_time() {
-                    println!();
-                    return;
-                }
-                let mut tile_count = tile_count.clone();
-                let mut now_tiles = vec![vec![0; input.n]; input.n];
-                now_tiles[input.n - 1][input.n - 1] = 16;
-                let mut next_poses = vec![];
-                let tile_is = get_tile_is(&input);
-                let mut count = 0;
-
-                match fix_tile_i {
-                    7 => {
-                        if i == 0 || j == input.n - 1 {
-                            continue;
-                        }
-                        now_tiles[i][j] = 7;
-                        tile_count[7] -= 1;
-                        next_poses.push((i, j - 1));
-                        next_poses.push((i - 1, j));
-                        next_poses.push((i, j + 1));
-                    }
-                    11 => {
-                        if i == 0 || i == input.n - 1 {
-                            continue;
-                        }
-                        now_tiles[i][j] = 11;
-                        tile_count[11] -= 1;
-                        next_poses.push((i, j - 1));
-                        next_poses.push((i - 1, j));
-                        next_poses.push((i + 1, j));
-                    }
-                    13 => {
-                        if i == input.n - 1 || j == input.n - 1 {
-                            continue;
-                        }
-                        now_tiles[i][j] = 13;
-                        tile_count[13] -= 1;
-                        next_poses.push((i, j - 1));
-                        next_poses.push((i, j + 1));
-                        next_poses.push((i + 1, j));
-                    }
-                    14 => {
-                        if i == 0 || i == input.n - 1 || j == input.n - 1 {
-                            continue;
-                        }
-                        now_tiles[i][j] = 14;
-                        tile_count[14] -= 1;
-                        next_poses.push((i - 1, j));
-                        next_poses.push((i, j + 1));
-                        next_poses.push((i + 1, j));
-                    }
-                    _ => unreachable!(),
-                }
-
-                if dfs(
-                    (0, 0),
-                    &input,
-                    &mut tile_count,
-                    &mut now_tiles,
-                    &mut next_poses,
-                    &tile_is,
-                    &mut count,
-                    &timer,
-                ) {
-                    eprintln!("count: {}", count);
-                    // for row in now_tiles.iter() {
-                    //     for t in row.iter() {
-                    //         eprint!("{:2} ", t);
-                    //     }
-                    //     eprintln!();
-                    // }
-                    return;
-                }
-            }
+        if dfs(
+            (0, 0),
+            &input,
+            &mut tile_count,
+            &mut now_tiles,
+            &mut next_poses,
+            &tile_is,
+            &mut count,
+            &timer,
+        ) {
+            eprintln!("count: {}", count);
+            // for row in now_tiles.iter() {
+            //     for t in row.iter() {
+            //         eprint!("{:2} ", t);
+            //     }
+            //     eprintln!();
+            // }
+            return;
         }
     }
-    // 見つけた木となるような操作列の構築 もdfsの中でやる↑
+    //  見つけた木となるような操作列の構築 もdfsの中でやる↑
     // let out = construct(&input, &mut now_tiles);
     // println!("{}", out.iter().take(input.t).join(""));
 }
@@ -4286,21 +4277,21 @@ fn dfs(
         }
     }
     *count += 1;
-    // if *count <= 1000000 && *count % 100000 == 0 {
-    //     eprintln!("count: {}", count);
-    //     eprintln!("{:?}", tile_count);
-    //     eprintln!("{} {}", input.n, input.t);
-    //     for row in now_tiles.iter() {
-    //         for t in row.iter() {
-    //             if *t == 16 {
-    //                 eprint!("{:x}", 0);
-    //             } else {
-    //                 eprint!("{:x}", t);
-    //             }
-    //         }
-    //         eprintln!();
-    //     }
-    // }
+    if *count <= 10000 && *count % 1000 == 0 {
+        eprintln!("count: {}", count);
+        eprintln!("{:?}", tile_count);
+        eprintln!("{} {}", input.n, input.t);
+        for row in now_tiles.iter() {
+            for t in row.iter() {
+                if *t == 16 {
+                    eprint!("{:x}", 0);
+                } else {
+                    eprint!("{:x}", t);
+                }
+            }
+            eprintln!();
+        }
+    }
     false
 }
 
@@ -4316,17 +4307,18 @@ fn is_connected(pos: (usize, usize), input: &Input, tiles: &[Vec<usize>]) -> boo
         for (d, (di, dj)) in DIJ.iter().enumerate() {
             let ni = v.0 + *di;
             let nj = v.1 + *dj;
-            if tiles[v.0][v.1] & (1 << d) == 0 {
-                // tileが開いてない方向には進めない
+            if ni >= input.n || nj >= input.n {
                 continue;
             }
-            if ni >= input.n || nj >= input.n {
+            if tiles[v.0][v.1] != 0 && tiles[v.0][v.1] != 16 && tiles[v.0][v.1] & (1 << d) == 0 {
+                // tileが開いてない方向には進めない
                 continue;
             }
             if visited[ni][nj] {
                 continue;
             }
-            if tiles[ni][nj] == 0 || tiles[ni][nj] == 16 {
+            if tiles[ni][nj] != 0 && tiles[ni][nj] != 16 && tiles[ni][nj] & (1 << (d ^ 2)) == 0 {
+                // 空きマスでなくてタイルが開いてないなら進んではいけない
                 continue;
             }
             visited[ni][nj] = true;
