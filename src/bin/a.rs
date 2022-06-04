@@ -2,7 +2,8 @@
     clippy::needless_range_loop,
     clippy::comparison_chain,
     clippy::collapsible_else_if,
-    clippy::same_item_push
+    clippy::same_item_push,
+    clippy::too_many_arguments
 )]
 use itertools::Itertools;
 use permutohedron::LexicalPermutation;
@@ -50,7 +51,7 @@ fn main() {
     if fix_tile_i == 15 {
         for j in (2..input.n - 1).rev() {
             for i in 1..input.n - 1 {
-                eprintln!("(i, j), ({} {})", i, j);
+                // eprintln!("(i, j), ({} {})", i, j);
                 if TIMELIMIT < timer.get_time() {
                     println!();
                     return;
@@ -77,8 +78,9 @@ fn main() {
                     &mut next_poses,
                     &tile_is,
                     &mut count,
+                    &timer,
                 ) {
-                    eprintln!("count: {}", count);
+                    // eprintln!("count: {}", count);
                     // for row in now_tiles.iter() {
                     //     for t in row.iter() {
                     //         eprint!("{:2} ", t);
@@ -92,7 +94,7 @@ fn main() {
     } else {
         for j in (2..input.n).rev() {
             for i in 0..input.n {
-                eprintln!("(i, j), ({} {})", i, j);
+                // eprintln!("(i, j), ({} {})", i, j);
                 if TIMELIMIT < timer.get_time() {
                     println!();
                     return;
@@ -156,8 +158,9 @@ fn main() {
                     &mut next_poses,
                     &tile_is,
                     &mut count,
+                    &timer,
                 ) {
-                    eprintln!("count: {}", count);
+                    // eprintln!("count: {}", count);
                     // for row in now_tiles.iter() {
                     //     for t in row.iter() {
                     //         eprint!("{:2} ", t);
@@ -4089,8 +4092,12 @@ fn dfs(
     next_poses: &mut Vec<(usize, usize)>,
     tile_is: &[Vec<Vec<usize>>],
     count: &mut usize,
+    timer: &Timer,
 ) -> bool {
-    if *count >= 1_150_000 {
+    if *count >= 1_050_000 {
+        return false;
+    }
+    if *count % 1000 == 0 && TIMELIMIT < timer.get_time() {
         return false;
     }
     // 今のposに置くタイルを決める
@@ -4209,6 +4216,7 @@ fn dfs(
                         next_poses,
                         tile_is,
                         count,
+                        timer,
                     ) {
                         return true;
                     }
@@ -4235,6 +4243,7 @@ fn dfs(
                         next_poses,
                         tile_is,
                         count,
+                        timer,
                     ) {
                         return true;
                     }
