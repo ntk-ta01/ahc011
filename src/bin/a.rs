@@ -17,7 +17,7 @@ pub type Output = Vec<char>;
 
 pub const DIJ: [(usize, usize); 4] = [(0, !0), (!0, 0), (0, 1), (1, 0)];
 pub const DIR: [char; 4] = ['L', 'U', 'R', 'D'];
-const TIMELIMIT: f64 = 2.2;
+const TIMELIMIT: f64 = 2.8;
 
 pub struct Input {
     pub n: usize,
@@ -4097,7 +4097,7 @@ fn dfs(
     count: &mut usize,
     timer: &Timer,
 ) -> bool {
-    if *count >= 1_050_000 {
+    if *count >= 1_250_000 {
         return false;
     }
     if *count % 100 == 0 && TIMELIMIT < timer.get_time() {
