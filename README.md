@@ -247,3 +247,8 @@ DLLURULDDLDRRULURDRUULDRRULDRDLUURDLLDLLURRRDRULDRDLLURDLLURDLLURDRULDRDLLURURUR
 ### あとはもう本当に高速化だけ
 - 一番個数が多いタイルを適当に配置する
 - 配置したらタイルの開いている方向の点を、DFSの開始点に含めておく
+
+N=6seed0が45sでcountが98324885だったのがどうなるだろう？
+やべー終わらなくなった
+
+上手く置かないと逆効果だったりするな

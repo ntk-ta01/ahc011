@@ -36,6 +36,38 @@ fn main() {
     let mut next_poses = vec![];
     let tile_is = get_tile_is(&input);
     let mut count = 0;
+    // タイルを事前に良い感じに置いておく
+    // マンハッタン距離の合計の小さいとかも加味した方がよさそう
+    let mut max = 0;
+    let mut max_i = 0;
+    for i in 0..4 {
+        if max < tile_count[1 << i] {
+            max = tile_count[1 << i];
+            max_i = 1 << i;
+        }
+    }
+    eprintln!("{}", max_i);
+    match max_i {
+        1 => {
+            // 右上に置く
+            now_tiles[0][input.n - 1] = 1;
+            tile_count[1] -= 1;
+            if now_tiles[0][input.n - 2] == 0 {
+                next_poses.push((input.n - 1, 1));
+            }
+        }
+        2 => {
+            // 左下に置く
+            now_tiles[input.n - 2][0] = 2;
+            tile_count[2] -= 1;
+            if now_tiles[input.n - 3][0] == 0 {
+                next_poses.push((input.n - 3, 0));
+            }
+        }
+        4 => {}
+        8 => {}
+        _ => unreachable!(),
+    }
     if dfs(
         (0, 0),
         &input,
@@ -1516,7 +1548,7 @@ fn slide2(
                                 }
                                 return out;
                             }
-                        } else if tiles[tar_b.0 + 1][tar_b.1] == tree_tiles[tar_a.0][tar_a.1]
+                        } else if tiles[tar_b.0][tar_b.1 + 1] == tree_tiles[tar_a.0][tar_a.1]
                             && tiles[tar_b.0][tar_b.1] == tree_tiles[tar_b.0][tar_b.1]
                         {
                             // orange 3
@@ -4051,6 +4083,20 @@ fn dfs(
                             tree_tiles[i][j] = *t;
                         }
                     }
+                    // eprintln!("count: {}", count);
+                    // for row in now_tiles.iter() {
+                    //     for t in row.iter() {
+                    //         eprint!("{:x}", t);
+                    //     }
+                    //     eprintln!();
+                    // }
+                    // eprintln!();
+                    // for row in now_tiles.iter() {
+                    //     for t in row.iter() {
+                    //         eprint!("{:2} ", t);
+                    //     }
+                    //     eprintln!();
+                    // }
                     if let Some(out) = construct(input, &mut tree_tiles) {
                         println!("{}", out.iter().take(input.t).join(""));
                         return true;
