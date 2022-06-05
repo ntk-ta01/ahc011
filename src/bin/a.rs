@@ -4613,7 +4613,7 @@ fn dfs(
     last_tiles: &mut [Vec<usize>],
     timer: &Timer,
 ) -> bool {
-    if *count >= 1_250_000 {
+    if *count >= 3_250_000 {
         return false;
     }
     if *count % 100 == 0 && TIMELIMIT < timer.get_time() {
