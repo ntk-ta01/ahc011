@@ -210,22 +210,21 @@ fn main() {
     }
     let mut last_tiles = vec![vec![0; input.n]; input.n];
     let tile_is = get_tile_is(&input);
-    for turn in 1.. {
+    for _turn in 1.. {
         if TIMELIMIT < timer.get_time() {
-            eprintln!("turn: {}", turn);
-            eprintln!("{} {}", input.n, input.t);
-            for row in now_tiles.iter() {
-                for t in row.iter() {
-                    if *t == 16 {
-                        eprint!("{:x}", 0);
-                    } else {
-                        eprint!("{:x}", t);
-                    }
-                }
-                eprintln!();
-            }
-            println!();
-            return;
+            // eprintln!("turn: {}", turn);
+            // eprintln!("{} {}", input.n, input.t);
+            // for row in now_tiles.iter() {
+            //     for t in row.iter() {
+            //         if *t == 16 {
+            //             eprint!("{:x}", 0);
+            //         } else {
+            //             eprint!("{:x}", t);
+            //         }
+            //     }
+            //     eprintln!();
+            // }
+            break;
         }
         let mut count = 0;
         let mut fails = vec![vec![0; input.n]; input.n];
@@ -512,7 +511,10 @@ fn main() {
                                         }
                                     }
                                 }
-                                if is_place && uoo_count < 3 {
+                                if uoo_count >= 3 {
+                                    is_place = false;
+                                }
+                                if is_place {
                                     // swapさせる
                                     let tmp = now_tiles[ni][nj];
                                     now_tiles[ni][nj] = now_tiles[i][j];
@@ -614,9 +616,50 @@ fn main() {
             }
         }
     }
-    //  見つけた木となるような操作列の構築 もdfsの中でやる↑
+    // 見つけた木となるような操作列の構築 もdfsの中でやる↑
     // let out = construct(&input, &mut now_tiles);
     // println!("{}", out.iter().take(input.t).join(""));
+    // 木が見つからなかったとき、適当に敷き詰めて解く
+    // tile_countをlast_tile要に作り変える
+    let last_tile_count = {
+        let mut count = vec![0; 17];
+        for row in last_tiles.iter() {
+            for t in row.iter() {
+                count[*t] += 1;
+            }
+        }
+        count
+    };
+    let mut in_tile_count = {
+        let mut count = vec![0; 17];
+        for row in input.tiles.iter() {
+            for t in row.iter() {
+                count[*t] += 1;
+            }
+        }
+        count
+    };
+    for i in 1..16 {
+        in_tile_count[i] -= last_tile_count[i];
+    }
+    for i in 0..input.n {
+        for j in 0..input.n {
+            if last_tiles[i][j] == 0 {
+                for tile_i in 1..16 {
+                    if in_tile_count[tile_i] > 0 {
+                        last_tiles[i][j] = tile_i;
+                        in_tile_count[tile_i] -= 1;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    if let Some(out) = construct(&input, &mut last_tiles) {
+        println!("{}", out.iter().join(""));
+    } else {
+        println!();
+    }
 }
 
 fn get_tile_is(input: &Input) -> Vec<Vec<Vec<usize>>> {
@@ -4542,7 +4585,45 @@ fn dfs(
         return false;
     }
     if *count % 100 == 0 && TIMELIMIT < timer.get_time() {
-        println!();
+        let last_tile_count = {
+            let mut count = vec![0; 17];
+            for row in last_tiles.iter() {
+                for t in row.iter() {
+                    count[*t] += 1;
+                }
+            }
+            count
+        };
+        let mut in_tile_count = {
+            let mut count = vec![0; 17];
+            for row in input.tiles.iter() {
+                for t in row.iter() {
+                    count[*t] += 1;
+                }
+            }
+            count
+        };
+        for i in 1..16 {
+            in_tile_count[i] -= last_tile_count[i];
+        }
+        for i in 0..input.n {
+            for j in 0..input.n {
+                if last_tiles[i][j] == 0 {
+                    for tile_i in 1..16 {
+                        if in_tile_count[tile_i] > 0 {
+                            last_tiles[i][j] = tile_i;
+                            in_tile_count[tile_i] -= 1;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        if let Some(out) = construct(input, last_tiles) {
+            println!("{}", out.iter().join(""));
+        } else {
+            println!();
+        }
         exit(0);
     }
     // 今のposに置くタイルを決める
@@ -4747,25 +4828,25 @@ fn dfs(
     // }
     // }
     fails[pos.0][pos.1] += 1;
-    if 100_000 == *count {
+    if 1_000_000 == *count {
         for i in 0..input.n {
             for j in 0..input.n {
                 last_tiles[i][j] = now_tiles[i][j];
             }
         }
-        eprintln!("count: {}", count);
-        eprintln!("{:?}", tile_count);
-        eprintln!("{} {}", input.n, input.t);
-        for row in now_tiles.iter() {
-            for t in row.iter() {
-                if *t == 16 {
-                    eprint!("{:x}", 0);
-                } else {
-                    eprint!("{:x}", t);
-                }
-            }
-            eprintln!();
-        }
+        // eprintln!("count: {}", count);
+        // eprintln!("{:?}", tile_count);
+        // eprintln!("{} {}", input.n, input.t);
+        // for row in now_tiles.iter() {
+        //     for t in row.iter() {
+        //         if *t == 16 {
+        //             eprint!("{:x}", 0);
+        //         } else {
+        //             eprint!("{:x}", t);
+        //         }
+        //     }
+        //     eprintln!();
+        // }
     }
     false
 }
