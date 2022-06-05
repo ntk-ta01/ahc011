@@ -2556,11 +2556,18 @@ fn slide2(
                                     }
                                 } else {
                                     // a_now.1 > empty.1
-                                    for _ in 0..(a_now.0 - empty.0 - 1) {
-                                        out.push('U');
-                                        tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                                        tiles[empty.0 - 1][empty.1] = 16;
-                                        empty.0 -= 1;
+                                    if a_now.0 < empty.0 {
+                                        for _ in 0..(empty.0 - a_now.0 - 1) {
+                                            out.push('U');
+                                            tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                            tiles[empty.0 - 1][empty.1] = 16;
+                                            empty.0 -= 1;
+                                        }
+                                    } else {
+                                        out.push('D');
+                                        tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                        tiles[empty.0 + 1][empty.1] = 16;
+                                        empty.0 += 1;
                                     }
                                     for _ in 0..(a_now.1 - empty.1 + 1) {
                                         out.push('R');
@@ -2918,12 +2925,19 @@ fn slide2(
                                         empty.1 -= 1;
                                     }
                                 } else {
-                                    // a_now.1 > empty.1
-                                    for _ in 0..(a_now.1 - empty.1 - 1) {
-                                        out.push('L');
-                                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                                        tiles[empty.0][empty.1 - 1] = 16;
-                                        empty.1 -= 1;
+                                    // a_now.0 > empty.0
+                                    if a_now.1 < empty.1 {
+                                        for _ in 0..(empty.1 - a_now.1 - 1) {
+                                            out.push('L');
+                                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                            tiles[empty.0][empty.1 - 1] = 16;
+                                            empty.1 -= 1;
+                                        }
+                                    } else {
+                                        out.push('R');
+                                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                        tiles[empty.0][empty.1 + 1] = 16;
+                                        empty.1 += 1;
                                     }
                                     for _ in 0..(a_now.0 - empty.0 + 1) {
                                         out.push('D');
