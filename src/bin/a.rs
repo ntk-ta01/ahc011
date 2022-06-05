@@ -565,6 +565,9 @@ fn main() {
                             if now_tiles[ni][nj] == 0 {
                                 continue;
                             }
+                            if now_tiles[ni][nj] == 16 {
+                                continue;
+                            }
                             tile_count[now_tiles[ni][nj]] += 1;
                             now_tiles[ni][nj] = 0;
                         }
@@ -4651,8 +4654,9 @@ fn dfs(
         if let Some(out) = construct(input, last_tiles) {
             println!("{}", out.iter().join(""));
         } else {
-            eprintln!("作れないやつ");
             println!();
+            for _ in 0..100 {}
+            eprintln!("作れないやつ");
         }
         eprintln!("uo---");
         exit(0);
