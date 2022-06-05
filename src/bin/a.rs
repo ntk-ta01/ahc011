@@ -18,7 +18,7 @@ pub type Output = Vec<char>;
 
 pub const DIJ: [(usize, usize); 4] = [(0, !0), (!0, 0), (0, 1), (1, 0)];
 pub const DIR: [char; 4] = ['L', 'U', 'R', 'D'];
-const TIMELIMIT: f64 = 2.8;
+const TIMELIMIT: f64 = 2.5;
 
 pub struct Input {
     pub n: usize,
@@ -4651,8 +4651,10 @@ fn dfs(
         if let Some(out) = construct(input, last_tiles) {
             println!("{}", out.iter().join(""));
         } else {
+            eprintln!("作れないやつ");
             println!();
         }
+        eprintln!("uo---");
         exit(0);
     }
     // 今のposに置くタイルを決める
