@@ -1413,7 +1413,7 @@ fn slide2(
                             }
                         }
                         // tar_b.0 + 1の行まで持ってくる
-                        for _ in 0..(tar_b.0 + 1 - empty.0) {
+                        for _ in 0..(empty.0 - tar_b.0 - 1) {
                             out.push('U');
                             tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
                             tiles[empty.0 - 1][empty.1] = 16;
@@ -1916,7 +1916,7 @@ fn slide2(
                             }
                         }
                         // tar_b.1 + 1の列まで持ってくる
-                        for _ in 0..(tar_b.1 + 1 - empty.1) {
+                        for _ in 0..(empty.1 - tar_b.1 - 1) {
                             out.push('L');
                             tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
                             tiles[empty.0][empty.1 - 1] = 16;
@@ -3296,10 +3296,10 @@ fn slide2(
                     tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
                     tiles[empty.0][empty.1 - 1] = 16;
                     empty.1 -= 1;
-                    out.push('U');
-                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                    tiles[empty.0 - 1][empty.1] = 16;
-                    empty.0 -= 1;
+                    out.push('D');
+                    tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                    tiles[empty.0 + 1][empty.1] = 16;
+                    empty.0 += 1;
                     return out;
                 }
             } else {
@@ -3438,10 +3438,10 @@ fn slide2(
                     tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
                     tiles[empty.0 - 1][empty.1] = 16;
                     empty.0 -= 1;
-                    out.push('L');
-                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                    tiles[empty.0][empty.1 - 1] = 16;
-                    empty.1 -= 1;
+                    out.push('R');
+                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                    tiles[empty.0][empty.1 + 1] = 16;
+                    empty.1 += 1;
                     return out;
                 }
             }

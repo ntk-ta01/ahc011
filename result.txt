@@ -7,21 +7,25 @@
 2
     Finished release [optimized] target(s) in 0.03s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+uo---
 3
-    Finished release [optimized] target(s) in 0.02s
-     Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
-4
-    Finished release [optimized] target(s) in 0.02s
-     Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
-5
     Finished release [optimized] target(s) in 0.04s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
-6
-    Finished release [optimized] target(s) in 0.02s
-     Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
-7
+4
     Finished release [optimized] target(s) in 0.03s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+uo---
+5
+    Finished release [optimized] target(s) in 0.02s
+     Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+6
+    Finished release [optimized] target(s) in 0.03s
+     Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+uo---
+7
+    Finished release [optimized] target(s) in 0.02s
+     Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+uo---
 8
     Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
@@ -29,22 +33,25 @@
     Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 10
-    Finished release [optimized] target(s) in 0.02s
+    Finished release [optimized] target(s) in 0.03s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 11
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 12
-    Finished release [optimized] target(s) in 0.02s
-     Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
-13
     Finished release [optimized] target(s) in 0.03s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
-14
+13
     Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+thread 'main' panicked at 'index out of bounds: the len is 9 but the index is 9', src/bin/a.rs:4044:51
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+14
+    Finished release [optimized] target(s) in 0.03s
+     Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+uo---
 15
-    Finished release [optimized] target(s) in 0.02s
+    Finished release [optimized] target(s) in 0.03s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 16
     Finished release [optimized] target(s) in 0.03s
@@ -55,11 +62,13 @@
 18
     Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+uo---
 19
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+uo---
 20
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 21
     Finished release [optimized] target(s) in 0.02s
@@ -77,7 +86,7 @@
     Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 26
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 27
     Finished release [optimized] target(s) in 0.02s
@@ -86,88 +95,98 @@
     Finished release [optimized] target(s) in 0.03s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 29
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 30
-    Finished release [optimized] target(s) in 0.04s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+uo---
 31
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+uo---
 32
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+uo---
 33
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+uo---
 34
     Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+uo---
 35
-    Finished release [optimized] target(s) in 0.02s
+    Finished release [optimized] target(s) in 0.03s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 36
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 37
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 38
     Finished release [optimized] target(s) in 0.03s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 39
-    Finished release [optimized] target(s) in 0.02s
+    Finished release [optimized] target(s) in 0.03s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 40
-    Finished release [optimized] target(s) in 0.02s
+    Finished release [optimized] target(s) in 0.03s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 41
     Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 42
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 43
     Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+uo---
 44
-    Finished release [optimized] target(s) in 0.02s
+    Finished release [optimized] target(s) in 0.03s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 45
     Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 46
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 47
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 48
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+uo---
 49
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+uo---
 50
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 51
-    Finished release [optimized] target(s) in 0.05s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+uo---
 52
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 53
     Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 54
-    Finished release [optimized] target(s) in 0.02s
+    Finished release [optimized] target(s) in 0.03s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 55
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+uo---
 56
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 57
     Finished release [optimized] target(s) in 0.02s
@@ -176,7 +195,7 @@
     Finished release [optimized] target(s) in 0.03s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 59
-    Finished release [optimized] target(s) in 0.02s
+    Finished release [optimized] target(s) in 0.03s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 60
     Finished release [optimized] target(s) in 0.03s
@@ -184,23 +203,27 @@
 61
     Finished release [optimized] target(s) in 0.03s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+uo---
 62
-    Finished release [optimized] target(s) in 0.02s
+    Finished release [optimized] target(s) in 0.04s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 63
-    Finished release [optimized] target(s) in 0.03s
-     Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
-64
     Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+uo---
+64
+    Finished release [optimized] target(s) in 0.03s
+     Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+uo---
 65
     Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 66
     Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+uo---
 67
-    Finished release [optimized] target(s) in 0.02s
+    Finished release [optimized] target(s) in 0.03s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 68
     Finished release [optimized] target(s) in 0.02s
@@ -212,20 +235,22 @@
     Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 71
-    Finished release [optimized] target(s) in 0.02s
+    Finished release [optimized] target(s) in 0.03s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 72
-    Finished release [optimized] target(s) in 0.04s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 73
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+uo---
 74
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 75
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+uo---
 76
     Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
@@ -233,43 +258,48 @@
     Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 78
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 79
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 80
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+uo---
 81
     Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+uo---
 82
     Finished release [optimized] target(s) in 0.03s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 83
-    Finished release [optimized] target(s) in 0.03s
-     Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
-84
     Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+84
+    Finished release [optimized] target(s) in 0.03s
+     Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+uo---
 85
     Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 86
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+thread 'main' panicked at 'index out of bounds: the len is 9 but the index is 18446744073709551615', src/bin/a.rs:1921:55
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 87
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 88
     Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 89
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 90
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 91
     Finished release [optimized] target(s) in 0.03s
@@ -280,15 +310,19 @@
 93
     Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+uo---
 94
-    Finished release [optimized] target(s) in 0.03s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+uo---
 95
     Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 96
     Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
+thread 'main' panicked at 'index out of bounds: the len is 9 but the index is 18446744073709551615', src/bin/a.rs:3442:47
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 97
     Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
@@ -296,5 +330,5 @@
     Finished release [optimized] target(s) in 0.02s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
 99
-    Finished release [optimized] target(s) in 0.02s
+    Finished release [optimized] target(s) in 0.03s
      Running `/home/ntk00ta/comp-pro/target/release/ahc011-a`
