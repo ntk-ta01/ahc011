@@ -78,7 +78,10 @@ fn main() {
                     if now_tiles[i][j + 1] != 0 && now_tiles[i][j + 1] & 1 != 1 {
                         continue;
                     }
-                    if now_tiles[i + 1][j] != 0 && (now_tiles[i][j - 1] >> 1) & 1 != 0 {
+                    if i != input.n - 1
+                        && now_tiles[i + 1][j] != 0
+                        && (now_tiles[i][j - 1] >> 1) & 1 != 0
+                    {
                         continue;
                     }
                     now_tiles[i][j] = 7;
@@ -106,7 +109,8 @@ fn main() {
                     if now_tiles[i + 1][j] != 0 && (now_tiles[i][j - 1] >> 1) & 1 != 1 {
                         continue;
                     }
-                    if now_tiles[i][j + 1] != 0 && now_tiles[i][j + 1] & 1 != 0 {
+                    if j != input.n - 1 && now_tiles[i][j + 1] != 0 && now_tiles[i][j + 1] & 1 != 0
+                    {
                         continue;
                     }
                     now_tiles[i][j] = 11;
@@ -134,7 +138,7 @@ fn main() {
                     if now_tiles[i + 1][j] != 0 && (now_tiles[i][j - 1] >> 1) & 1 != 1 {
                         continue;
                     }
-                    if now_tiles[i - 1][j] != 0 && (now_tiles[i - 1][j] >> 3) & 1 != 0 {
+                    if i != 0 && now_tiles[i - 1][j] != 0 && (now_tiles[i - 1][j] >> 3) & 1 != 0 {
                         continue;
                     }
                     now_tiles[i][j] = 13;
@@ -162,7 +166,7 @@ fn main() {
                     if now_tiles[i + 1][j] != 0 && (now_tiles[i][j - 1] >> 1) & 1 != 1 {
                         continue;
                     }
-                    if now_tiles[i][j - 1] != 0 && (now_tiles[i][j - 1] >> 2) & 1 != 0 {
+                    if j != 0 && now_tiles[i][j - 1] != 0 && (now_tiles[i][j - 1] >> 2) & 1 != 0 {
                         continue;
                     }
                     now_tiles[i][j] = 14;
@@ -4534,7 +4538,7 @@ fn dfs(
     last_tiles: &mut [Vec<usize>],
     timer: &Timer,
 ) -> bool {
-    if *count >= 150_000 {
+    if *count >= 1_250_000 {
         return false;
     }
     if *count % 100 == 0 && TIMELIMIT < timer.get_time() {
@@ -4749,19 +4753,19 @@ fn dfs(
                 last_tiles[i][j] = now_tiles[i][j];
             }
         }
-        // eprintln!("count: {}", count);
-        // eprintln!("{:?}", tile_count);
-        // eprintln!("{} {}", input.n, input.t);
-        // for row in now_tiles.iter() {
-        //     for t in row.iter() {
-        //         if *t == 16 {
-        //             eprint!("{:x}", 0);
-        //         } else {
-        //             eprint!("{:x}", t);
-        //         }
-        //     }
-        //     eprintln!();
-        // }
+        eprintln!("count: {}", count);
+        eprintln!("{:?}", tile_count);
+        eprintln!("{} {}", input.n, input.t);
+        for row in now_tiles.iter() {
+            for t in row.iter() {
+                if *t == 16 {
+                    eprint!("{:x}", 0);
+                } else {
+                    eprint!("{:x}", t);
+                }
+            }
+            eprintln!();
+        }
     }
     false
 }
