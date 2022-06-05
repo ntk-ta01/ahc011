@@ -8,7 +8,7 @@
 use itertools::Itertools;
 use permutohedron::LexicalPermutation;
 use proconio::{input, marker::Chars};
-use rand::prelude::*;
+// use rand::prelude::*;
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     process::exit,
@@ -27,7 +27,7 @@ pub struct Input {
 }
 fn main() {
     let timer = Timer::new();
-    let mut rng = rand_chacha::ChaCha20Rng::seed_from_u64(93216000);
+    // let mut rng = rand_chacha::ChaCha20Rng::seed_from_u64(93216000);
     let input = parse_input();
     // 頂点数N^2 - 1の木を見つける
     let mut tile_count = {
@@ -206,8 +206,20 @@ fn main() {
     }
     let mut last_tiles = vec![vec![0; input.n]; input.n];
     let tile_is = get_tile_is(&input);
-    for _ in 1..2 {
+    for turn in 1.. {
         if TIMELIMIT < timer.get_time() {
+            eprintln!("turn: {}", turn);
+            eprintln!("{} {}", input.n, input.t);
+            for row in now_tiles.iter() {
+                for t in row.iter() {
+                    if *t == 16 {
+                        eprint!("{:x}", 0);
+                    } else {
+                        eprint!("{:x}", t);
+                    }
+                }
+                eprintln!();
+            }
             println!();
             return;
         }
@@ -235,12 +247,12 @@ fn main() {
             return;
         }
         // 作れなかった場合のnow_tilesから教訓を得たい
-        for row in fails.iter() {
-            for f in row.iter() {
-                eprint!("{:7} ", f);
-            }
-            eprintln!();
-        }
+        // for row in fails.iter() {
+        //     for f in row.iter() {
+        //         eprint!("{:7} ", f);
+        //     }
+        //     eprintln!();
+        // }
         // now_tilesを調整
         // 1に挟まれている奴をfix
         // 縦のチェック
@@ -558,22 +570,43 @@ fn main() {
                 }
             }
         }
-        eprintln!("{} {}", input.n, input.t);
-        for row in now_tiles.iter() {
-            for t in row.iter() {
-                if *t == 16 {
-                    eprint!("{:x}", 0);
-                } else {
-                    eprint!("{:x}", t);
-                }
-            }
-            eprintln!();
-        }
+        // eprintln!("{} {}", input.n, input.t);
+        // for row in now_tiles.iter() {
+        //     for t in row.iter() {
+        //         if *t == 16 {
+        //             eprint!("{:x}", 0);
+        //         } else {
+        //             eprint!("{:x}", t);
+        //         }
+        //     }
+        //     eprintln!();
+        // }
         // next_posesを作り直す
         next_poses.clear();
         for i in 0..input.n {
             for j in 0..input.n {
-                if now_tiles[i][j] != 0 && now_tiles[i][j] != 16 {}
+                if now_tiles[i][j] != 0 && now_tiles[i][j] != 16 {
+                    for (d, (di, dj)) in DIJ.iter().enumerate() {
+                        let ni = i + *di;
+                        let nj = j + *dj;
+                        if ni >= input.n || nj >= input.n {
+                            continue;
+                        }
+                        if now_tiles[ni][nj] == 0 || now_tiles[ni][nj] == 16 {
+                            continue;
+                        }
+                        if (now_tiles[i][j] >> d) & 1 == 0 {
+                            continue;
+                        }
+                        if fails[ni][nj] == 1_000_000_007 {
+                            // next_posesに挿入済み
+                            // failsもう使わないから使いまわした
+                            continue;
+                        }
+                        next_poses.push((ni, nj));
+                        fails[ni][nj] = 1_000_000_007;
+                    }
+                }
             }
         }
     }
@@ -4716,19 +4749,19 @@ fn dfs(
                 last_tiles[i][j] = now_tiles[i][j];
             }
         }
-        eprintln!("count: {}", count);
-        eprintln!("{:?}", tile_count);
-        eprintln!("{} {}", input.n, input.t);
-        for row in now_tiles.iter() {
-            for t in row.iter() {
-                if *t == 16 {
-                    eprint!("{:x}", 0);
-                } else {
-                    eprint!("{:x}", t);
-                }
-            }
-            eprintln!();
-        }
+        // eprintln!("count: {}", count);
+        // eprintln!("{:?}", tile_count);
+        // eprintln!("{} {}", input.n, input.t);
+        // for row in now_tiles.iter() {
+        //     for t in row.iter() {
+        //         if *t == 16 {
+        //             eprint!("{:x}", 0);
+        //         } else {
+        //             eprint!("{:x}", t);
+        //         }
+        //     }
+        //     eprintln!();
+        // }
     }
     false
 }
