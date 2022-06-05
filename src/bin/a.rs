@@ -18,7 +18,7 @@ pub type Output = Vec<char>;
 
 pub const DIJ: [(usize, usize); 4] = [(0, !0), (!0, 0), (0, 1), (1, 0)];
 pub const DIR: [char; 4] = ['L', 'U', 'R', 'D'];
-const TIMELIMIT: f64 = 2.5;
+const TIMELIMIT: f64 = 2.7;
 
 pub struct Input {
     pub n: usize,
@@ -45,8 +45,7 @@ fn main() {
     now_tiles[input.n - 1][input.n - 1] = 16;
     let mut next_poses = vec![];
 
-    let mut fix_count = 0;
-    'fixlp: for j in (0..input.n).rev() {
+    for j in (0..input.n).rev() {
         for i in 0..input.n {
             // 次数3以上を固定する
             let fix_tile_i = input.tiles[i][j];
@@ -206,10 +205,6 @@ fn main() {
                     next_poses.push((i + 1, j));
                 }
                 _ => unreachable!(),
-            }
-            fix_count += 1;
-            if input.n / 3 <= fix_count {
-                break 'fixlp;
             }
         }
     }
@@ -472,7 +467,7 @@ fn main() {
                                         if ni2 >= input.n
                                             || nj2 >= input.n
                                             || now_tiles[ni2][nj2] != 0
-                                                && d ^ 2 != max_i
+                                                && d ^ 2 != other_i
                                                 && (now_tiles[ni2][nj2] >> (d ^ 2)) & 1 == 0
                                         {
                                             // 別のタイルを置いているマスであって、そのタイルが開いていない方向に
@@ -487,7 +482,7 @@ fn main() {
                                             && (ni2 >= input.n
                                                 || nj2 >= input.n
                                                 || now_tiles[ni][nj] != 0
-                                                    && d ^ 2 == max_i
+                                                    && d ^ 2 == other_i
                                                     && (now_tiles[ni][nj] >> (d ^ 2)) & 1 == 0)
                                         {
                                             // swapするタイルとつながるか
@@ -507,7 +502,7 @@ fn main() {
                                             && now_tiles[ni][nj] != 0
                                             && (ni2 < input.n
                                                 && nj2 < input.n
-                                                && d ^ 2 == max_i
+                                                && d ^ 2 == other_i
                                                 && (now_tiles[ni][nj] >> (d ^ 2)) & 1 == 1)
                                         {
                                             // now_tilesが開いていない方向が、壁じゃないかつ
@@ -584,6 +579,7 @@ fn main() {
                 }
             }
         }
+        // eprintln!("now");
         // eprintln!("{} {}", input.n, input.t);
         // for row in now_tiles.iter() {
         //     for t in row.iter() {
@@ -595,6 +591,82 @@ fn main() {
         //     }
         //     eprintln!();
         // }
+        // eprintln!("last");
+        // eprintln!("{} {}", input.n, input.t);
+        // for row in last_tiles.iter() {
+        //     for t in row.iter() {
+        //         if *t == 16 {
+        //             eprint!("{:x}", 0);
+        //         } else {
+        //             eprint!("{:x}", t);
+        //         }
+        //     }
+        //     eprintln!();
+        // }
+        // now_tilesにあるやつを移動させる
+        let ord = vec![0, 1, 2, 3];
+        let mut moved = vec![vec![false; input.n]; input.n];
+        for i in 0..input.n {
+            for j in 0..input.n {
+                if moved[i][j] {
+                    continue;
+                }
+                if now_tiles[i][j] != 0
+                    && now_tiles[i][j] != 16
+                    && arr.iter().any(|ai| *ai == now_tiles[i][j])
+                {
+                    // 次数3以上なら必ず移動
+                    // 移動できなければ削除
+                    let mut is_place;
+                    for &other_i in ord.iter() {
+                        let ni = i + DIJ[other_i].0;
+                        let nj = j + DIJ[other_i].1;
+                        if ni >= input.n || nj >= input.n {
+                            continue;
+                        }
+                        if now_tiles[ni][nj] == 16 {
+                            continue;
+                        }
+                        is_place = true;
+                        for (d, (di, dj)) in DIJ.iter().enumerate() {
+                            // now_tiles[i][j]を置けるかチェック
+                            // 開いている方向が壁でなく、空きマスか他のマスの開いている方向か見る
+                            let ni2 = ni + *di;
+                            let nj2 = nj + *dj;
+                            if (now_tiles[i][j] >> d) & 1 == 1 {
+                                if ni2 >= input.n
+                                    || nj2 >= input.n
+                                    || now_tiles[ni2][nj2] != 0
+                                        && (d ^ 2) != other_i
+                                        && (now_tiles[ni2][nj2] >> (d ^ 2)) & 1 == 0
+                                {
+                                    is_place = false;
+                                }
+                            } else {
+                                if ni2 < input.n
+                                    && nj2 < input.n
+                                    && d ^ 2 != other_i
+                                    && (now_tiles[ni2][nj2] >> (d ^ 2)) & 1 == 1
+                                {
+                                    // now_tilesが開いていない方向が、壁じゃないかつ
+                                    // 別のタイルの開いている方向なら置けない
+                                    is_place = false;
+                                }
+                            }
+                        }
+                        if is_place {
+                            // swapさせる
+                            let tmp = now_tiles[ni][nj];
+                            now_tiles[ni][nj] = now_tiles[i][j];
+                            now_tiles[i][j] = tmp;
+                            moved[ni][nj] = true;
+                            moved[i][j] = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
         // next_posesを作り直す
         next_poses.clear();
         for i in 0..input.n {
@@ -4668,7 +4740,7 @@ fn dfs(
     last_tiles: &mut [Vec<usize>],
     timer: &Timer,
 ) -> bool {
-    if *count >= 3_250_000 {
+    if *count >= 2_250_000 {
         return false;
     }
     if *count % 100 == 0 && TIMELIMIT < timer.get_time() {
