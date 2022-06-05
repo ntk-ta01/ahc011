@@ -45,8 +45,9 @@ fn main() {
     now_tiles[input.n - 1][input.n - 1] = 16;
     let mut next_poses = vec![];
 
-    for i in 0..input.n {
-        for j in 0..input.n {
+    let mut fix_count = 0;
+    'fixlp: for j in (0..input.n).rev() {
+        for i in 0..input.n {
             // 次数3以上を固定する
             let fix_tile_i = input.tiles[i][j];
             if arr.iter().all(|a| *a != fix_tile_i) {
@@ -205,6 +206,10 @@ fn main() {
                     next_poses.push((i + 1, j));
                 }
                 _ => unreachable!(),
+            }
+            fix_count += 1;
+            if input.n / 3 <= fix_count {
+                break 'fixlp;
             }
         }
     }
@@ -2581,22 +2586,47 @@ fn slide2(
                                             tiles[empty.0 - 1][empty.1] = 16;
                                             empty.0 -= 1;
                                         }
+                                        for _ in 0..(a_now.1 - empty.1 + 1) {
+                                            out.push('R');
+                                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                            tiles[empty.0][empty.1 + 1] = 16;
+                                            empty.1 += 1;
+                                        }
+                                        out.push('D');
+                                        tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                        tiles[empty.0 + 1][empty.1] = 16;
+                                        empty.0 += 1;
+                                    } else if empty.0 != input.n - 1 {
+                                        out.push('D');
+                                        tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                        tiles[empty.0 + 1][empty.1] = 16;
+                                        empty.0 += 1;
+                                        for _ in 0..(a_now.1 - empty.1 + 1) {
+                                            out.push('R');
+                                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                            tiles[empty.0][empty.1 + 1] = 16;
+                                            empty.1 += 1;
+                                        }
+                                        out.push('U');
+                                        tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                        tiles[empty.0 - 1][empty.1] = 16;
+                                        empty.0 -= 1;
                                     } else {
+                                        out.push('U');
+                                        tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
+                                        tiles[empty.0 - 1][empty.1] = 16;
+                                        empty.0 -= 1;
+                                        for _ in 0..(a_now.1 - empty.1 + 1) {
+                                            out.push('R');
+                                            tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                            tiles[empty.0][empty.1 + 1] = 16;
+                                            empty.1 += 1;
+                                        }
                                         out.push('D');
                                         tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
                                         tiles[empty.0 + 1][empty.1] = 16;
                                         empty.0 += 1;
                                     }
-                                    for _ in 0..(a_now.1 - empty.1 + 1) {
-                                        out.push('R');
-                                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
-                                        tiles[empty.0][empty.1 + 1] = 16;
-                                        empty.1 += 1;
-                                    }
-                                    out.push('U');
-                                    tiles[empty.0][empty.1] = tiles[empty.0 - 1][empty.1];
-                                    tiles[empty.0 - 1][empty.1] = 16;
-                                    empty.0 -= 1;
                                 }
                             }
                             // 空きマスはa_nowと同じ行であって、a_now.1 <= empty.1となっている
@@ -2951,22 +2981,47 @@ fn slide2(
                                             tiles[empty.0][empty.1 - 1] = 16;
                                             empty.1 -= 1;
                                         }
+                                        for _ in 0..(a_now.0 - empty.0 + 1) {
+                                            out.push('D');
+                                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                            tiles[empty.0 + 1][empty.1] = 16;
+                                            empty.0 += 1;
+                                        }
+                                        out.push('R');
+                                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                        tiles[empty.0][empty.1 + 1] = 16;
+                                        empty.1 += 1;
+                                    } else if empty.1 != input.n - 1 {
+                                        out.push('R');
+                                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
+                                        tiles[empty.0][empty.1 + 1] = 16;
+                                        empty.1 += 1;
+                                        for _ in 0..(a_now.0 - empty.0 + 1) {
+                                            out.push('D');
+                                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                            tiles[empty.0 + 1][empty.1] = 16;
+                                            empty.0 += 1;
+                                        }
+                                        out.push('L');
+                                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                        tiles[empty.0][empty.1 - 1] = 16;
+                                        empty.1 -= 1;
                                     } else {
+                                        out.push('L');
+                                        tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
+                                        tiles[empty.0][empty.1 - 1] = 16;
+                                        empty.1 -= 1;
+                                        for _ in 0..(a_now.0 - empty.0 + 1) {
+                                            out.push('D');
+                                            tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
+                                            tiles[empty.0 + 1][empty.1] = 16;
+                                            empty.0 += 1;
+                                        }
                                         out.push('R');
                                         tiles[empty.0][empty.1] = tiles[empty.0][empty.1 + 1];
                                         tiles[empty.0][empty.1 + 1] = 16;
                                         empty.1 += 1;
                                     }
-                                    for _ in 0..(a_now.0 - empty.0 + 1) {
-                                        out.push('D');
-                                        tiles[empty.0][empty.1] = tiles[empty.0 + 1][empty.1];
-                                        tiles[empty.0 + 1][empty.1] = 16;
-                                        empty.0 += 1;
-                                    }
-                                    out.push('L');
-                                    tiles[empty.0][empty.1] = tiles[empty.0][empty.1 - 1];
-                                    tiles[empty.0][empty.1 - 1] = 16;
-                                    empty.1 -= 1;
                                 }
                             }
                             // 空きマスはa_nowと同じ列であって、a_now.0 <= empty.0となっている
