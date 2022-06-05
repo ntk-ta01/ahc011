@@ -240,13 +240,13 @@ fn main() {
             &mut last_tiles,
             &timer,
         ) {
-            eprintln!("count: {}", count);
-            for row in now_tiles.iter() {
-                for t in row.iter() {
-                    eprint!("{:2} ", t);
-                }
-                eprintln!();
-            }
+            // eprintln!("count: {}", count);
+            // for row in now_tiles.iter() {
+            //     for t in row.iter() {
+            //         eprint!("{:2} ", t);
+            //     }
+            //     eprintln!();
+            // }
             return;
         }
         // 作れなかった場合のnow_tilesから教訓を得たい
@@ -642,19 +642,32 @@ fn main() {
     for i in 1..16 {
         in_tile_count[i] -= last_tile_count[i];
     }
+    let mut tile_i = 1;
     for i in 0..input.n {
         for j in 0..input.n {
             if last_tiles[i][j] == 0 {
-                for tile_i in 1..16 {
-                    if in_tile_count[tile_i] > 0 {
-                        last_tiles[i][j] = tile_i;
-                        in_tile_count[tile_i] -= 1;
-                        break;
+                while in_tile_count[tile_i] == 0 {
+                    tile_i += 1;
+                    if tile_i == 16 {
+                        tile_i = 1;
                     }
+                }
+                last_tiles[i][j] = tile_i;
+                in_tile_count[tile_i] -= 1;
+                tile_i += 1;
+                if tile_i == 16 {
+                    tile_i = 1;
                 }
             }
         }
     }
+    // eprintln!("last: ");
+    // for row in last_tiles.iter() {
+    //     for t in row.iter() {
+    //         eprint!("{:2} ", t);
+    //     }
+    //     eprintln!();
+    // }
     if let Some(out) = construct(&input, &mut last_tiles) {
         println!("{}", out.iter().join(""));
     } else {
@@ -964,7 +977,9 @@ fn slide3x3(
     let mut v = g;
     let mut v_tiles = goal;
     while v != s {
-        let i = prev[map[&v]];
+        let pi = map.get(&v)?;
+        let i = prev[*pi];
+
         out.push(DIR[i]);
         let ni = empty.0 + DIJ[i ^ 2].0;
         let nj = empty.1 + DIJ[i ^ 2].1;
