@@ -9,10 +9,7 @@ use itertools::Itertools;
 use permutohedron::LexicalPermutation;
 use proconio::{input, marker::Chars};
 // use rand::prelude::*;
-use std::{
-    collections::{HashMap, HashSet, VecDeque},
-    process::exit,
-};
+use std::collections::{HashMap, HashSet, VecDeque};
 
 pub type Output = Vec<char>;
 
@@ -39,720 +36,67 @@ fn main() {
         }
         count
     };
-    let arr = [7, 11, 13, 14, 15];
+    // let arr = [7, 11, 13, 14, 15];
 
     let mut now_tiles = vec![vec![0; input.n]; input.n];
     now_tiles[input.n - 1][input.n - 1] = 16;
     let mut next_poses = vec![];
 
-    for j in (0..input.n).rev() {
-        for i in 0..input.n {
-            // 次数3以上を固定する
-            let fix_tile_i = input.tiles[i][j];
-            if arr.iter().all(|a| *a != fix_tile_i) {
-                continue;
-            }
-            // eprintln!("(i, j), ({} {})", i, j);
-            if i == input.n - 1 && j == input.n - 1 {
-                continue;
-            }
-            // TODO:不可能な組合せには置きたくない
-            // まず開いているか確認
-            match fix_tile_i {
-                7 => {
-                    if i == 0 || j == 0 || j == input.n - 1 {
-                        continue;
-                    }
-                    if tile_count[7] == 0 {
-                        continue;
-                    }
-                    if now_tiles[i][j] != 0 {
-                        continue;
-                    }
-                    if now_tiles[i][j - 1] != 0 && (now_tiles[i][j - 1] >> 2) & 1 != 1 {
-                        continue;
-                    }
-                    if now_tiles[i - 1][j] != 0 && (now_tiles[i - 1][j] >> 3) & 1 != 1 {
-                        continue;
-                    }
-                    if now_tiles[i][j + 1] != 0 && now_tiles[i][j + 1] & 1 != 1 {
-                        continue;
-                    }
-                    if i != input.n - 1
-                        && now_tiles[i + 1][j] != 0
-                        && (now_tiles[i][j - 1] >> 1) & 1 != 0
-                    {
-                        continue;
-                    }
-                    now_tiles[i][j] = 7;
-                    tile_count[7] -= 1;
-                    next_poses.push((i, j - 1));
-                    next_poses.push((i - 1, j));
-                    next_poses.push((i, j + 1));
-                }
-                11 => {
-                    if i == 0 || j == 0 || i == input.n - 1 {
-                        continue;
-                    }
-                    if tile_count[11] == 0 {
-                        continue;
-                    }
-                    if now_tiles[i][j] != 0 {
-                        continue;
-                    }
-                    if now_tiles[i][j - 1] != 0 && (now_tiles[i][j - 1] >> 2) & 1 != 1 {
-                        continue;
-                    }
-                    if now_tiles[i - 1][j] != 0 && (now_tiles[i - 1][j] >> 3) & 1 != 1 {
-                        continue;
-                    }
-                    if now_tiles[i + 1][j] != 0 && (now_tiles[i][j - 1] >> 1) & 1 != 1 {
-                        continue;
-                    }
-                    if j != input.n - 1 && now_tiles[i][j + 1] != 0 && now_tiles[i][j + 1] & 1 != 0
-                    {
-                        continue;
-                    }
-                    now_tiles[i][j] = 11;
-                    tile_count[11] -= 1;
-                    next_poses.push((i, j - 1));
-                    next_poses.push((i - 1, j));
-                    next_poses.push((i + 1, j));
-                }
-                13 => {
-                    if i == input.n - 1 || j == 0 || j == input.n - 1 {
-                        continue;
-                    }
-                    if tile_count[13] == 0 {
-                        continue;
-                    }
-                    if now_tiles[i][j] != 0 {
-                        continue;
-                    }
-                    if now_tiles[i][j - 1] != 0 && (now_tiles[i][j - 1] >> 2) & 1 != 1 {
-                        continue;
-                    }
-                    if now_tiles[i][j + 1] != 0 && now_tiles[i][j + 1] & 1 != 1 {
-                        continue;
-                    }
-                    if now_tiles[i + 1][j] != 0 && (now_tiles[i][j - 1] >> 1) & 1 != 1 {
-                        continue;
-                    }
-                    if i != 0 && now_tiles[i - 1][j] != 0 && (now_tiles[i - 1][j] >> 3) & 1 != 0 {
-                        continue;
-                    }
-                    now_tiles[i][j] = 13;
-                    tile_count[13] -= 1;
-                    next_poses.push((i, j - 1));
-                    next_poses.push((i, j + 1));
-                    next_poses.push((i + 1, j));
-                }
-                14 => {
-                    if i == 0 || i == input.n - 1 || j == 0 || j == input.n - 1 {
-                        continue;
-                    }
-                    if tile_count[14] == 0 {
-                        continue;
-                    }
-                    if now_tiles[i][j] != 0 {
-                        continue;
-                    }
-                    if now_tiles[i - 1][j] != 0 && (now_tiles[i - 1][j] >> 3) & 1 != 1 {
-                        continue;
-                    }
-                    if now_tiles[i][j + 1] != 0 && now_tiles[i][j + 1] & 1 != 1 {
-                        continue;
-                    }
-                    if now_tiles[i + 1][j] != 0 && (now_tiles[i][j - 1] >> 1) & 1 != 1 {
-                        continue;
-                    }
-                    if j != 0 && now_tiles[i][j - 1] != 0 && (now_tiles[i][j - 1] >> 2) & 1 != 0 {
-                        continue;
-                    }
-                    now_tiles[i][j] = 14;
-                    tile_count[14] -= 1;
-                    next_poses.push((i - 1, j));
-                    next_poses.push((i, j + 1));
-                    next_poses.push((i + 1, j));
-                }
-                15 => {
-                    if i == 0 || i == input.n - 1 || j == 0 || j == input.n - 1 {
-                        continue;
-                    }
-                    if tile_count[15] == 0 {
-                        continue;
-                    }
-                    if now_tiles[i][j] != 0 {
-                        continue;
-                    }
-                    if now_tiles[i][j - 1] != 0 && (now_tiles[i][j - 1] >> 2) & 1 != 1 {
-                        continue;
-                    }
-                    if now_tiles[i - 1][j] != 0 && (now_tiles[i - 1][j] >> 3) & 1 != 1 {
-                        continue;
-                    }
-                    if now_tiles[i][j + 1] != 0 && now_tiles[i][j + 1] & 1 != 1 {
-                        continue;
-                    }
-                    if now_tiles[i + 1][j] != 0 && (now_tiles[i][j - 1] >> 1) & 1 != 1 {
-                        continue;
-                    }
-                    now_tiles[i][j] = 15;
-                    tile_count[15] -= 1;
-                    next_poses.push((i, j - 1));
-                    next_poses.push((i - 1, j));
-                    next_poses.push((i, j + 1));
-                    next_poses.push((i + 1, j));
-                }
-                _ => unreachable!(),
-            }
-        }
-    }
-    let mut last_tiles = vec![vec![0; input.n]; input.n];
     let tile_is = get_tile_is(&input);
-    for _turn in 1.. {
-        if TIMELIMIT < timer.get_time() {
-            // eprintln!("turn: {}", turn);
-            // eprintln!("{} {}", input.n, input.t);
-            // for row in now_tiles.iter() {
-            //     for t in row.iter() {
-            //         if *t == 16 {
-            //             eprint!("{:x}", 0);
-            //         } else {
-            //             eprint!("{:x}", t);
-            //         }
-            //     }
-            //     eprintln!();
-            // }
-            break;
-        }
-        let mut count = 0;
-        let mut fails = vec![vec![0; input.n]; input.n];
-        if dfs(
-            (0, 0),
-            &input,
-            &mut tile_count,
-            &mut now_tiles,
-            &mut next_poses,
-            &tile_is,
-            &mut count,
-            &mut fails,
-            &mut last_tiles,
-            &timer,
-        ) {
-            // eprintln!("count: {}", count);
-            // for row in now_tiles.iter() {
-            //     for t in row.iter() {
-            //         eprint!("{:2} ", t);
-            //     }
-            //     eprintln!();
-            // }
-            return;
-        }
-        // 作れなかった場合のnow_tilesから教訓を得たい
-        // for row in fails.iter() {
-        //     for f in row.iter() {
-        //         eprint!("{:7} ", f);
-        //     }
-        //     eprintln!();
-        // }
-        // now_tilesを調整
-        // 1に挟まれている奴をfix
-        // 縦のチェック
-        for i in 1..input.n - 1 {
-            for j in 0..input.n {
-                if 0 < fails[i - 1][j]
-                    && fails[i - 1][j] <= 3
-                    && 0 < fails[i + 1][j]
-                    && fails[i + 1][j] <= 3
-                    && last_tiles[i][j] != 0
-                    && 0 < tile_count[last_tiles[i][j]]
-                {
-                    now_tiles[i][j] = last_tiles[i][j];
-                    tile_count[now_tiles[i][j]] -= 1;
-                }
+    // for _turn in 1.. {
+    //     if TIMELIMIT < timer.get_time() {
+    // eprintln!("turn: {}", turn);
+    // eprintln!("{} {}", input.n, input.t);
+    // for row in now_tiles.iter() {
+    //     for t in row.iter() {
+    //         if *t == 16 {
+    //             eprint!("{:x}", 0);
+    //         } else {
+    //             eprint!("{:x}", t);
+    //         }
+    //     }
+    //     eprintln!();
+    // }
+    //     break;
+    // }
+    let mut count = 0;
+    if dfs(
+        (0, 0),
+        &input,
+        &mut tile_count,
+        &mut now_tiles,
+        &mut next_poses,
+        &tile_is,
+        &mut count,
+        &timer,
+    ) {
+        eprintln!("count: {}", count);
+        for row in now_tiles.iter() {
+            for t in row.iter() {
+                eprint!("{:2} ", t);
             }
+            eprintln!();
         }
-        // 横のチェック
-        for i in 0..input.n {
-            for j in 1..input.n - 1 {
-                if 0 < fails[i][j - 1]
-                    && fails[i][j - 1] <= 3
-                    && 0 < fails[i][j + 1]
-                    && fails[i][j + 1] <= 3
-                    && last_tiles[i][j] != 0
-                    && 0 < tile_count[last_tiles[i][j]]
-                {
-                    now_tiles[i][j] = last_tiles[i][j];
-                    tile_count[now_tiles[i][j]] -= 1;
-                }
-            }
-        }
-        // eprintln!("{} {}", input.n, input.t);
-        // for row in now_tiles.iter() {
-        //     for t in row.iter() {
-        //         if *t == 16 {
-        //             eprint!("{:x}", 0);
-        //         } else {
-        //             eprint!("{:x}", t);
-        //         }
-        //     }
-        //     eprintln!();
-        // }
-        let mut moved = vec![vec![false; input.n]; input.n];
-        // 悪い奴を破壊する 破壊？前後左右どこかに移動 タイルがあったらswap
-        for i in 0..input.n {
-            for j in 0..input.n {
-                if moved[i][j] {
-                    continue;
-                }
-                if arr.iter().any(|ai| *ai == now_tiles[i][j]) {
-                    // 1に挟まれてても
-                    // 4近傍でめちゃくちゃに失敗しているとき、移動させる
-                    // 移動先はつながるように選ぶ、どこにも移動できなかったら削除する
-                    let mut max_fail = 0;
-                    let mut max_i = 0;
-                    for (d, (di, dj)) in DIJ.iter().enumerate() {
-                        let ni = i + *di;
-                        let nj = j + *dj;
-                        if input.n <= ni || input.n <= nj {
-                            continue;
-                        }
-                        if max_fail < fails[ni][nj] {
-                            max_fail = fails[ni][nj];
-                            max_i = d;
-                        }
-                    }
-                    if 100 <= max_fail {
-                        // 移動 or 削除の対象
-                        // まずmax_iに移動できるか試す
-                        // タイル番号が同じ奴とswapしても仕方ない
-                        // 移動先がfails=1でもつながってたらおっけー
-                        // fails = 0とはつながっている必要ある？いったんあるにしておくか
-                        let mut is_place = true;
-                        let ni = i + DIJ[max_i].0;
-                        let nj = j + DIJ[max_i].1;
-                        if now_tiles[ni][nj] == 0 {
-                            for (d, (di, dj)) in DIJ.iter().enumerate() {
-                                // now_tiles[i][j]を置けるかチェック
-                                // 開いている方向が壁でなく、空きマスか他のマスの開いている方向か見る
-                                let ni2 = ni + *di;
-                                let nj2 = nj + *dj;
-                                if (now_tiles[i][j] >> d) & 1 == 1 {
-                                    if ni2 >= input.n
-                                        || nj2 >= input.n
-                                        || now_tiles[ni2][nj2] != 0
-                                            && d ^ 2 != max_i
-                                            && (now_tiles[ni2][nj2] >> (d ^ 2)) & 1 == 0
-                                    {
-                                        // 別のタイルを置いているマスであって、そのタイルが開いていない方向に
-                                        // now_tiles[i][j]が開いていると置けない
-                                        // d^2 != max_i は今タイルの置いていないマスと交換しようとしているので
-                                        // now_tiles[ni][nj] == 0なら
-                                        // 元来た方向を見るとき（d^2 == max_i）は必ず条件を満たす
-                                        is_place = false;
-                                    }
-                                } else {
-                                    if ni2 < input.n
-                                        && nj2 < input.n
-                                        && d ^ 2 != max_i
-                                        && (now_tiles[ni2][nj2] >> (d ^ 2)) & 1 == 1
-                                    {
-                                        // now_tilesが開いていない方向が、壁じゃないかつ
-                                        // 別のタイルの開いている方向なら置けない
-                                        is_place = false;
-                                    }
-                                }
-                            }
-                            if is_place {
-                                // 移動させる
-                                now_tiles[ni][nj] = now_tiles[i][j];
-                                now_tiles[i][j] = 0;
-                                moved[ni][nj] = true;
-                                moved[i][j] = true;
-                            }
-                        } else if now_tiles[ni][nj] != 16 {
-                            // 空きマスでない 16も動かしたくない
-                            for (d, (di, dj)) in DIJ.iter().enumerate() {
-                                // now_tiles[i][j]を置けるかチェック
-                                // 開いている方向が壁でなく、空きマスか他のマスの開いている方向か見る
-                                let ni2 = ni + *di;
-                                let nj2 = nj + *dj;
-                                if (now_tiles[i][j] >> d) & 1 == 1 {
-                                    if ni2 >= input.n
-                                        || nj2 >= input.n
-                                        || now_tiles[ni2][nj2] != 0
-                                            && d ^ 2 != max_i
-                                            && (now_tiles[ni2][nj2] >> (d ^ 2)) & 1 == 0
-                                    {
-                                        // 別のタイルを置いているマスであって、そのタイルが開いていない方向に
-                                        // now_tiles[i][j]が開いていると置けない
-                                        is_place = false;
-                                    }
-                                    if ni2 >= input.n
-                                        || nj2 >= input.n
-                                        || now_tiles[ni][nj] != 0
-                                            && d ^ 2 == max_i
-                                            && (now_tiles[ni][nj] >> (d ^ 2)) & 1 == 0
-                                    {
-                                        // swapするタイルとつながるか
-                                        is_place = false;
-                                    }
-                                } else {
-                                    if ni2 < input.n
-                                        && nj2 < input.n
-                                        && d ^ 2 != max_i
-                                        && (now_tiles[ni2][nj2] >> (d ^ 2)) & 1 == 1
-                                    {
-                                        // now_tilesが開いていない方向が、壁じゃないかつ
-                                        // 別のタイルの開いている方向なら置けない
-                                        is_place = false;
-                                    }
-                                    if ni2 < input.n
-                                        && nj2 < input.n
-                                        && d ^ 2 == max_i
-                                        && (now_tiles[ni][nj] >> (d ^ 2)) & 1 == 1
-                                    {
-                                        // now_tilesが開いていない方向が、壁じゃないかつ
-                                        // swapするタイルの開いている方向なら置けない
-                                        is_place = false;
-                                    }
-                                }
-                            }
-                            if is_place {
-                                // swapさせる
-                                let tmp = now_tiles[ni][nj];
-                                now_tiles[ni][nj] = now_tiles[i][j];
-                                now_tiles[i][j] = tmp;
-                                moved[ni][nj] = true;
-                                moved[i][j] = true;
-                            }
-                        } else {
-                            is_place = false;
-                        }
-                        if !is_place {
-                            // max_i以外の方向に動かせるか調べる
-                            for other_i in 0..4 {
-                                if other_i == max_i {
-                                    continue;
-                                }
-                                let ni = i + DIJ[other_i].0;
-                                let nj = j + DIJ[other_i].1;
-                                if ni >= input.n || nj >= input.n {
-                                    continue;
-                                }
-                                if now_tiles[ni][nj] == 16 {
-                                    continue;
-                                }
-                                is_place = true;
-                                // 次数3以上で上手くいってそうなタイルは動かしたくない
-                                // そういうタイルの周りはそんなに失敗していないと思いたい
-                                // いやそんなことはないか……
-                                // 交換先のタイルが次数3以上で
-                                // 3つ以上fails <= 3があったら交換しない
-                                let mut uoo_count = 0;
-                                for (d, (di, dj)) in DIJ.iter().enumerate() {
-                                    // now_tiles[i][j]を置けるかチェック
-                                    // 開いている方向が壁でなく、空きマスか他のマスの開いている方向か見る
-                                    let ni2 = ni + *di;
-                                    let nj2 = nj + *dj;
-                                    if ni2 < input.n
-                                        && nj2 < input.n
-                                        && arr.iter().any(|ai| now_tiles[ni][nj] == *ai)
-                                        && fails[ni2][nj2] <= 3
-                                    {
-                                        uoo_count += 1;
-                                    }
-                                    if (now_tiles[i][j] >> d) & 1 == 1 {
-                                        if ni2 >= input.n
-                                            || nj2 >= input.n
-                                            || now_tiles[ni2][nj2] != 0
-                                                && d ^ 2 != other_i
-                                                && (now_tiles[ni2][nj2] >> (d ^ 2)) & 1 == 0
-                                        {
-                                            // 別のタイルを置いているマスであって、そのタイルが開いていない方向に
-                                            // now_tiles[i][j]が開いていると置けない
-                                            // d^2 != max_i は今タイルの置いていないマスと交換しようとしているので
-                                            // now_tiles[ni][nj] == 0なら
-                                            // 元来た方向を見るとき（d^2 == max_i）は必ず条件を満たす
-                                            is_place = false;
-                                        }
-                                        if now_tiles[ni][nj] != 16
-                                            && now_tiles[ni][nj] != 0
-                                            && (ni2 >= input.n
-                                                || nj2 >= input.n
-                                                || now_tiles[ni][nj] != 0
-                                                    && d ^ 2 == other_i
-                                                    && (now_tiles[ni][nj] >> (d ^ 2)) & 1 == 0)
-                                        {
-                                            // swapするタイルとつながるか
-                                            is_place = false;
-                                        }
-                                    } else {
-                                        if ni2 < input.n
-                                            && nj2 < input.n
-                                            && d ^ 2 != max_i
-                                            && (now_tiles[ni2][nj2] >> (d ^ 2)) & 1 == 1
-                                        {
-                                            // now_tilesが開いていない方向が、壁じゃないかつ
-                                            // 別のタイルの開いている方向なら置けない
-                                            is_place = false;
-                                        }
-                                        if now_tiles[ni][nj] != 16
-                                            && now_tiles[ni][nj] != 0
-                                            && (ni2 < input.n
-                                                && nj2 < input.n
-                                                && d ^ 2 == other_i
-                                                && (now_tiles[ni][nj] >> (d ^ 2)) & 1 == 1)
-                                        {
-                                            // now_tilesが開いていない方向が、壁じゃないかつ
-                                            // swapするタイルの開いている方向なら置けない
-                                            is_place = false;
-                                        }
-                                    }
-                                }
-                                if uoo_count >= 3 {
-                                    is_place = false;
-                                }
-                                if is_place {
-                                    // swapさせる
-                                    let tmp = now_tiles[ni][nj];
-                                    now_tiles[ni][nj] = now_tiles[i][j];
-                                    now_tiles[i][j] = tmp;
-                                    moved[ni][nj] = true;
-                                    moved[i][j] = true;
-                                    break;
-                                }
-                            }
-                        }
-                        if !is_place {
-                            // 置けなかったので排除する
-                            tile_count[now_tiles[i][j]] += 1;
-                            now_tiles[i][j] = 0;
-                        }
-                    }
-                }
-            }
-        }
-        for i in 0..input.n {
-            for j in 0..input.n {
-                if now_tiles[i][j] == 0 {
-                    let mut need_tile = 0;
-                    let mut adds = vec![0];
-                    for (d, (di, dj)) in DIJ.iter().enumerate() {
-                        let ni = i + *di;
-                        let nj = j + *dj;
-                        if ni >= input.n || nj >= input.n {
-                            continue;
-                        }
-                        if now_tiles[ni][nj] == 0 {
-                            adds.push(1 << d);
-                            continue;
-                        }
-                        if (now_tiles[ni][nj] >> (d ^ 2)) & 1 == 1 {
-                            need_tile |= 1 << d;
-                        }
-                    }
-                    if adds.iter().all(|b| tile_count[need_tile | *b] == 0) {
-                        // now_tiles[i][j]に置くようなタイルがない
-                        // ので周りを削除する
-                        for (di, dj) in DIJ.iter() {
-                            let ni = i + *di;
-                            let nj = j + *dj;
-                            if ni >= input.n || nj >= input.n {
-                                continue;
-                            }
-                            if now_tiles[ni][nj] == 0 {
-                                continue;
-                            }
-                            if now_tiles[ni][nj] == 16 {
-                                continue;
-                            }
-                            tile_count[now_tiles[ni][nj]] += 1;
-                            now_tiles[ni][nj] = 0;
-                        }
-                    } else if adds.len() == 1 {
-                        // addsのlenが1なら一通りだから置いちゃう方がよくないか？
-                        now_tiles[i][j] = need_tile;
-                        tile_count[need_tile] -= 1;
-                    }
-                }
-            }
-        }
-        // eprintln!("now");
-        // eprintln!("{} {}", input.n, input.t);
-        // for row in now_tiles.iter() {
-        //     for t in row.iter() {
-        //         if *t == 16 {
-        //             eprint!("{:x}", 0);
-        //         } else {
-        //             eprint!("{:x}", t);
-        //         }
-        //     }
-        //     eprintln!();
-        // }
-        // eprintln!("last");
-        // eprintln!("{} {}", input.n, input.t);
-        // for row in last_tiles.iter() {
-        //     for t in row.iter() {
-        //         if *t == 16 {
-        //             eprint!("{:x}", 0);
-        //         } else {
-        //             eprint!("{:x}", t);
-        //         }
-        //     }
-        //     eprintln!();
-        // }
-        // now_tilesにあるやつを移動させる
-        let ord = vec![0, 1, 2, 3];
-        let mut moved = vec![vec![false; input.n]; input.n];
-        for i in 0..input.n {
-            for j in 0..input.n {
-                if moved[i][j] {
-                    continue;
-                }
-                if now_tiles[i][j] != 0
-                    && now_tiles[i][j] != 16
-                    && arr.iter().any(|ai| *ai == now_tiles[i][j])
-                {
-                    // 次数3以上なら必ず移動
-                    // 移動できなければ削除
-                    let mut is_place;
-                    for &other_i in ord.iter() {
-                        let ni = i + DIJ[other_i].0;
-                        let nj = j + DIJ[other_i].1;
-                        if ni >= input.n || nj >= input.n {
-                            continue;
-                        }
-                        if now_tiles[ni][nj] == 16 {
-                            continue;
-                        }
-                        is_place = true;
-                        for (d, (di, dj)) in DIJ.iter().enumerate() {
-                            // now_tiles[i][j]を置けるかチェック
-                            // 開いている方向が壁でなく、空きマスか他のマスの開いている方向か見る
-                            let ni2 = ni + *di;
-                            let nj2 = nj + *dj;
-                            if (now_tiles[i][j] >> d) & 1 == 1 {
-                                if ni2 >= input.n
-                                    || nj2 >= input.n
-                                    || now_tiles[ni2][nj2] != 0
-                                        && (d ^ 2) != other_i
-                                        && (now_tiles[ni2][nj2] >> (d ^ 2)) & 1 == 0
-                                {
-                                    is_place = false;
-                                }
-                            } else {
-                                if ni2 < input.n
-                                    && nj2 < input.n
-                                    && d ^ 2 != other_i
-                                    && (now_tiles[ni2][nj2] >> (d ^ 2)) & 1 == 1
-                                {
-                                    // now_tilesが開いていない方向が、壁じゃないかつ
-                                    // 別のタイルの開いている方向なら置けない
-                                    is_place = false;
-                                }
-                            }
-                        }
-                        if is_place {
-                            // swapさせる
-                            let tmp = now_tiles[ni][nj];
-                            now_tiles[ni][nj] = now_tiles[i][j];
-                            now_tiles[i][j] = tmp;
-                            moved[ni][nj] = true;
-                            moved[i][j] = true;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        // next_posesを作り直す
-        next_poses.clear();
-        for i in 0..input.n {
-            for j in 0..input.n {
-                if now_tiles[i][j] != 0 && now_tiles[i][j] != 16 {
-                    for (d, (di, dj)) in DIJ.iter().enumerate() {
-                        let ni = i + *di;
-                        let nj = j + *dj;
-                        if ni >= input.n || nj >= input.n {
-                            continue;
-                        }
-                        if now_tiles[ni][nj] == 0 || now_tiles[ni][nj] == 16 {
-                            continue;
-                        }
-                        if (now_tiles[i][j] >> d) & 1 == 0 {
-                            continue;
-                        }
-                        if fails[ni][nj] == 1_000_000_007 {
-                            // next_posesに挿入済み
-                            // failsもう使わないから使いまわした
-                            continue;
-                        }
-                        next_poses.push((ni, nj));
-                        fails[ni][nj] = 1_000_000_007;
-                    }
-                }
-            }
-        }
+        // return;
     }
+
+    // eprintln!("{} {}", input.n, input.t);
+    // for row in now_tiles.iter() {
+    //     for t in row.iter() {
+    //         if *t == 16 {
+    //             eprint!("{:x}", 0);
+    //         } else {
+    //             eprint!("{:x}", t);
+    //         }
+    //     }
+    //     eprintln!();
+    // }
+    // }
     // 見つけた木となるような操作列の構築 もdfsの中でやる↑
     // let out = construct(&input, &mut now_tiles);
     // println!("{}", out.iter().take(input.t).join(""));
     // 木が見つからなかったとき、適当に敷き詰めて解く
     // tile_countをlast_tile要に作り変える
-    let last_tile_count = {
-        let mut count = vec![0; 17];
-        for row in last_tiles.iter() {
-            for t in row.iter() {
-                count[*t] += 1;
-            }
-        }
-        count
-    };
-    let mut in_tile_count = {
-        let mut count = vec![0; 17];
-        for row in input.tiles.iter() {
-            for t in row.iter() {
-                count[*t] += 1;
-            }
-        }
-        count
-    };
-    for i in 1..16 {
-        in_tile_count[i] -= last_tile_count[i];
-    }
-    let mut tile_i = 1;
-    for i in 0..input.n {
-        for j in 0..input.n {
-            if last_tiles[i][j] == 0 {
-                while in_tile_count[tile_i] == 0 {
-                    tile_i += 1;
-                    if tile_i == 16 {
-                        tile_i = 1;
-                    }
-                }
-                last_tiles[i][j] = tile_i;
-                in_tile_count[tile_i] -= 1;
-                tile_i += 1;
-                if tile_i == 16 {
-                    tile_i = 1;
-                }
-            }
-        }
-    }
-    // eprintln!("last: ");
-    // for row in last_tiles.iter() {
-    //     for t in row.iter() {
-    //         eprint!("{:2} ", t);
-    //     }
-    //     eprintln!();
-    // }
-    if let Some(out) = construct(&input, &mut last_tiles) {
-        println!("{}", out.iter().join(""));
-    } else {
-        println!();
-    }
 }
 
 fn get_tile_is(input: &Input) -> Vec<Vec<Vec<usize>>> {
@@ -4736,58 +4080,15 @@ fn dfs(
     next_poses: &mut Vec<(usize, usize)>,
     tile_is: &[Vec<Vec<usize>>],
     count: &mut usize,
-    fails: &mut [Vec<usize>],
-    last_tiles: &mut [Vec<usize>],
     timer: &Timer,
 ) -> bool {
-    if *count >= 2_250_000 {
-        return false;
-    }
-    if *count % 100 == 0 && TIMELIMIT < timer.get_time() {
-        let last_tile_count = {
-            let mut count = vec![0; 17];
-            for row in last_tiles.iter() {
-                for t in row.iter() {
-                    count[*t] += 1;
-                }
-            }
-            count
-        };
-        let mut in_tile_count = {
-            let mut count = vec![0; 17];
-            for row in input.tiles.iter() {
-                for t in row.iter() {
-                    count[*t] += 1;
-                }
-            }
-            count
-        };
-        for i in 1..16 {
-            in_tile_count[i] -= last_tile_count[i];
-        }
-        for i in 0..input.n {
-            for j in 0..input.n {
-                if last_tiles[i][j] == 0 {
-                    for tile_i in 1..16 {
-                        if in_tile_count[tile_i] > 0 {
-                            last_tiles[i][j] = tile_i;
-                            in_tile_count[tile_i] -= 1;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        if let Some(out) = construct(input, last_tiles) {
-            println!("{}", out.iter().join(""));
-        } else {
-            println!();
-            for _ in 0..100 {}
-            eprintln!("作れないやつ");
-        }
-        eprintln!("uo---");
-        exit(0);
-    }
+    // if *count >= 2_250_000 {
+    //     return false;
+    // }
+    // if *count % 100 == 0 && TIMELIMIT < timer.get_time() {
+    // exit(0);
+    // return false;
+    // }
     // 今のposに置くタイルを決める
     for &tile_i in tile_is[pos.0][pos.1].iter() {
         if tile_count[tile_i] == 0 {
@@ -4918,8 +4219,6 @@ fn dfs(
                         next_poses,
                         tile_is,
                         count,
-                        fails,
-                        last_tiles,
                         timer,
                     ) {
                         return true;
@@ -4958,8 +4257,6 @@ fn dfs(
                         next_poses,
                         tile_is,
                         count,
-                        fails,
-                        last_tiles,
                         timer,
                     ) {
                         return true;
@@ -4989,27 +4286,6 @@ fn dfs(
     //     eprintln!();
     // }
     // }
-    fails[pos.0][pos.1] += 1;
-    if 1_000_000 == *count {
-        for i in 0..input.n {
-            for j in 0..input.n {
-                last_tiles[i][j] = now_tiles[i][j];
-            }
-        }
-        // eprintln!("count: {}", count);
-        // eprintln!("{:?}", tile_count);
-        // eprintln!("{} {}", input.n, input.t);
-        // for row in now_tiles.iter() {
-        //     for t in row.iter() {
-        //         if *t == 16 {
-        //             eprint!("{:x}", 0);
-        //         } else {
-        //             eprint!("{:x}", t);
-        //         }
-        //     }
-        //     eprintln!();
-        // }
-    }
     false
 }
 
