@@ -8,14 +8,14 @@
 use itertools::Itertools;
 use permutohedron::LexicalPermutation;
 use proconio::{input, marker::Chars};
-// use rand::prelude::*;
+use rand::prelude::*;
 use std::collections::{HashMap, HashSet, VecDeque};
 
 pub type Output = Vec<char>;
 
 pub const DIJ: [(usize, usize); 4] = [(0, !0), (!0, 0), (0, 1), (1, 0)];
 pub const DIR: [char; 4] = ['L', 'U', 'R', 'D'];
-const TIMELIMIT: f64 = 2.7;
+const TIMELIMIT: f64 = 1.7;
 
 pub struct Input {
     pub n: usize,
@@ -23,121 +23,154 @@ pub struct Input {
     pub tiles: Vec<Vec<usize>>,
 }
 fn main() {
-    let timer = Timer::new();
-    // let mut rng = rand_chacha::ChaCha20Rng::seed_from_u64(93216000);
+    let mut timer = Timer::new();
+    let mut rng = rand_chacha::ChaCha20Rng::seed_from_u64(93216000);
     let input = parse_input();
     // 頂点数N^2 - 1の木を見つける
-    let mut tile_count = {
-        let mut count = vec![0; 16];
-        for row in input.tiles.iter() {
-            for t in row.iter() {
-                count[*t] += 1;
-            }
-        }
-        count
-    };
-    // let arr = [7, 11, 13, 14, 15];
-
-    let mut now_tiles = vec![vec![0; input.n]; input.n];
-    now_tiles[input.n - 1][input.n - 1] = 16;
-    let mut next_poses = vec![];
-
-    let tile_is = get_tile_is(&input);
-    // for _turn in 1.. {
-    //     if TIMELIMIT < timer.get_time() {
-    // eprintln!("turn: {}", turn);
+    let mut now_tiles = annealing(&input, &mut timer, &mut rng);
     // eprintln!("{} {}", input.n, input.t);
     // for row in now_tiles.iter() {
-    //     for t in row.iter() {
-    //         if *t == 16 {
-    //             eprint!("{:x}", 0);
-    //         } else {
-    //             eprint!("{:x}", t);
-    //         }
+    //     for &t in row.iter() {
+    //         eprint!("{:x}", t);
     //     }
     //     eprintln!();
     // }
-    //     break;
-    // }
-    let mut count = 0;
-    if dfs(
-        (0, 0),
-        &input,
-        &mut tile_count,
-        &mut now_tiles,
-        &mut next_poses,
-        &tile_is,
-        &mut count,
-        &timer,
-    ) {
-        eprintln!("count: {}", count);
-        for row in now_tiles.iter() {
-            for t in row.iter() {
-                eprint!("{:2} ", t);
-            }
-            eprintln!();
-        }
-        // return;
+
+    // 見つけた木となるような操作列の構築
+    if let Some(out) = construct(&input, &mut now_tiles) {
+        println!("{}", out.iter().take(input.t).join(""));
+    } else {
+        println!();
     }
-
-    // eprintln!("{} {}", input.n, input.t);
-    // for row in now_tiles.iter() {
-    //     for t in row.iter() {
-    //         if *t == 16 {
-    //             eprint!("{:x}", 0);
-    //         } else {
-    //             eprint!("{:x}", t);
-    //         }
-    //     }
-    //     eprintln!();
-    // }
-    // }
-    // 見つけた木となるような操作列の構築 もdfsの中でやる↑
-    // let out = construct(&input, &mut now_tiles);
-    // println!("{}", out.iter().take(input.t).join(""));
-    // 木が見つからなかったとき、適当に敷き詰めて解く
-    // tile_countをlast_tile要に作り変える
 }
 
-fn get_tile_is(input: &Input) -> Vec<Vec<Vec<usize>>> {
-    let mut tile_is = vec![vec![vec![]; input.n]; input.n];
-    for pi in 0..input.n {
-        for pj in 0..input.n {
-            let mut is = vec![];
-            let mut que = VecDeque::new();
-            let mut visited = vec![vec![false; input.n]; input.n];
-            let mut used_tile_i = vec![false; 16];
-            visited[pi][pj] = true;
-            que.push_back((pi, pj));
-            used_tile_i[0] = true;
-            while !que.is_empty() && used_tile_i.iter().any(|b| !*b) {
-                let v = que.pop_front().unwrap();
-                for (di, dj) in DIJ.iter() {
-                    let ni = v.0 + *di;
-                    let nj = v.1 + *dj;
-                    if input.n <= ni || input.n <= nj {
-                        continue;
-                    }
-                    if visited[ni][nj] {
-                        continue;
-                    }
-                    let tile_i = if input.tiles[ni][nj] != 16 {
-                        input.tiles[ni][nj]
-                    } else {
-                        0
-                    };
-                    if !used_tile_i[tile_i] {
-                        is.push(tile_i);
-                        used_tile_i[tile_i] = true;
-                    }
-                    visited[ni][nj] = true;
-                    que.push_back((ni, nj));
+fn annealing(
+    input: &Input,
+    timer: &mut Timer,
+    rng: &mut rand_chacha::ChaCha20Rng,
+) -> Vec<Vec<usize>> {
+    const T0: f64 = 100.0;
+    const T1: f64 = 0.1;
+    let mut temp = T0;
+    let mut prob;
+    let mut now_tiles = {
+        let mut v = vec![vec![0; input.n]; input.n];
+        let mut empty = (0, 0);
+        for (i, row) in input.tiles.iter().enumerate() {
+            for (j, t) in row.iter().enumerate() {
+                v[i][j] = *t;
+                if *t == 0 {
+                    empty = (i, j);
                 }
             }
-            tile_is[pi][pj] = is;
+        }
+        let tmp = v[input.n - 1][input.n - 1];
+        v[input.n - 1][input.n - 1] = 0;
+        v[empty.0][empty.1] = tmp;
+        v
+    };
+    let mut now_score = compute_tree_score(&now_tiles, input);
+
+    let mut best_tiles = {
+        let mut v = vec![vec![0; input.n]; input.n];
+        for (i, row) in now_tiles.iter().enumerate() {
+            for (j, t) in row.iter().enumerate() {
+                v[i][j] = *t;
+            }
+        }
+        v
+    };
+    let mut best_score = now_score;
+
+    let mut count = 0;
+    loop {
+        if count >= 100 {
+            let passed = timer.get_time() / TIMELIMIT;
+            if passed >= 1.0 {
+                break;
+            }
+            temp = T0.powf(1.0 - passed) * T1.powf(passed);
+            count = 0;
+        }
+        count += 1;
+        let mut new_tiles = {
+            let mut v = vec![vec![0; input.n]; input.n];
+            for (i, row) in now_tiles.iter().enumerate() {
+                for (j, t) in row.iter().enumerate() {
+                    v[i][j] = *t;
+                }
+            }
+            v
+        };
+        // 近傍解作成
+        let i1 = rng.gen_range(0, input.n);
+        let j1 = rng.gen_range(0, input.n);
+        let i2 = rng.gen_range(0, input.n);
+        let j2 = rng.gen_range(0, input.n);
+        if i1 == input.n - 1 && j1 == input.n - 1 || i2 == input.n - 1 && j2 == input.n - 1 {
+            continue;
+        }
+        let tmp = new_tiles[i1][j1];
+        new_tiles[i1][j1] = new_tiles[i2][j2];
+        new_tiles[i2][j2] = tmp;
+        // 近傍解作成ここまで
+        let new_score = compute_tree_score(&new_tiles, input);
+        prob = f64::exp((now_score - new_score) as f64 / temp);
+        if now_score > new_score || rng.gen_bool(prob) {
+            now_score = new_score;
+            now_tiles = new_tiles;
+        }
+
+        if best_score > now_score {
+            best_score = now_score;
+            best_tiles = {
+                let mut v = vec![vec![0; input.n]; input.n];
+                for (i, row) in now_tiles.iter().enumerate() {
+                    for (j, t) in row.iter().enumerate() {
+                        v[i][j] = *t;
+                    }
+                }
+                v
+            };
         }
     }
-    tile_is
+    best_tiles
+}
+
+fn compute_tree_score(tiles: &[Vec<usize>], input: &Input) -> i64 {
+    let mut uf = UnionFind::new(input.n * input.n);
+    let mut tree = vec![true; input.n * input.n];
+    for i in 0..input.n {
+        for j in 0..input.n {
+            if i + 1 < input.n && tiles[i][j] & 8 != 0 && tiles[i + 1][j] & 2 != 0 {
+                let a = uf.find(i * input.n + j);
+                let b = uf.find((i + 1) * input.n + j);
+                if a == b {
+                    tree[a] = false;
+                } else {
+                    let t = tree[a] && tree[b];
+                    uf.unite(a, b);
+                    tree[uf.find(a)] = t;
+                }
+            }
+            if j + 1 < input.n && tiles[i][j] & 4 != 0 && tiles[i][j + 1] & 1 != 0 {
+                let a = uf.find(i * input.n + j);
+                let b = uf.find(i * input.n + j + 1);
+                if a == b {
+                    tree[a] = false;
+                } else {
+                    let t = tree[a] && tree[b];
+                    uf.unite(a, b);
+                    tree[uf.find(a)] = t;
+                }
+            }
+        }
+    }
+    let component_count = (0..input.n * input.n)
+        .map(|i| uf.find(i))
+        .collect::<HashSet<usize>>()
+        .len() as i64;
+    component_count * component_count
 }
 
 fn get_now(
@@ -4002,366 +4035,6 @@ fn slide(
     out
 }
 
-fn is_empty_space(input: &Input, now_tiles: &[Vec<usize>]) -> bool {
-    // 455900
-    // c9c34b
-    // a6380a <- ここの0みたいなのを空きスペースと言った
-    // 698edb
-    // 067300
-    // 000000
-    // こういうのがあったらtrue
-
-    // うわーついでにこういうのも空きスペースと呼びたい
-    // 455900 <- この右上に絶対にいけない
-    // c9c349
-    // a6384b
-    // 698edb
-    // 067300
-    // 000000
-
-    // もっとやばい
-    // 800880
-    // 655ba0
-    // 00c3a0
-    // 00acb0
-    // 006ba0
-    // 000200
-
-    // 0からBFSしてどこか開いているところにつながればOK
-    // つながらなかったらデッドスペースができている
-    // 0からBFSすれば4x4とかも全部見れるのでは？？？
-    let mut que = VecDeque::new();
-    let mut visited = vec![vec![false; input.n]; input.n];
-    for si in 0..input.n {
-        for sj in 0..input.n {
-            if now_tiles[si][sj] != 0 {
-                continue;
-            }
-            if visited[si][sj] {
-                continue;
-            }
-            visited[si][sj] = true;
-            que.push_back((si, sj));
-            let mut is_open = false; // 0だけで到達できる連結成分のどこかが開いているかチェック
-            while !que.is_empty() {
-                let v = que.pop_front().unwrap();
-                for (d, (di, dj)) in DIJ.iter().enumerate() {
-                    let ni = v.0 + *di;
-                    let nj = v.1 + *dj;
-                    if input.n <= ni || input.n <= nj {
-                        continue;
-                    }
-                    if visited[ni][nj] {
-                        continue;
-                    }
-                    if now_tiles[ni][nj] == 0 {
-                        visited[ni][nj] = true;
-                        que.push_back((ni, nj));
-                    } else if (now_tiles[ni][nj] >> (d ^ 2)) & 1 == 1 {
-                        // 開いているかチェック
-                        is_open = true;
-                    }
-                }
-            }
-            if !is_open {
-                return true;
-            }
-        }
-    }
-
-    false
-}
-
-fn dfs(
-    pos: (usize, usize),
-    input: &Input,
-    tile_count: &mut [i32],
-    now_tiles: &mut [Vec<usize>],
-    next_poses: &mut Vec<(usize, usize)>,
-    tile_is: &[Vec<Vec<usize>>],
-    count: &mut usize,
-    timer: &Timer,
-) -> bool {
-    // if *count >= 2_250_000 {
-    //     return false;
-    // }
-    // if *count % 100 == 0 && TIMELIMIT < timer.get_time() {
-    // exit(0);
-    // return false;
-    // }
-    // 今のposに置くタイルを決める
-    for &tile_i in tile_is[pos.0][pos.1].iter() {
-        if tile_count[tile_i] == 0 {
-            // このタイルはない
-            continue;
-        }
-        let mut open_count = 0;
-        let mut can_empty_space = false;
-        let mut can_empty_space2 = false;
-        let mut is_place = true;
-        let mut dij = vec![];
-        let mut connect_count = 0;
-        for (d, (di, dj)) in DIJ.iter().enumerate() {
-            // L, U, R, D
-            let i2 = pos.0 + *di;
-            let j2 = pos.1 + *dj;
-            if (tile_i >> d) & 1 == 1 {
-                if i2 < input.n
-                    && j2 < input.n
-                    && (now_tiles[i2][j2] == 0 || ((now_tiles[i2][j2] >> (d ^ 2)) & 1 == 1))
-                {
-                    // 空きマスか、今置くタイルと繋がっているか
-                    if now_tiles[i2][j2] == 0 {
-                        open_count += 1;
-                        dij.push((i2, j2));
-                    } else {
-                        connect_count += 1;
-                    }
-                } else {
-                    // このタイルは置けない
-                    is_place = false;
-                    break;
-                }
-            } else {
-                // このタイルが開いていない方向が別のタイルの開いている方向なら、このタイルは置けない
-                if i2 < input.n && j2 < input.n && (now_tiles[i2][j2] >> (d ^ 2)) & 1 == 1 {
-                    // このタイルは置けない
-                    is_place = false;
-                    break;
-                }
-                // 今置くタイルが開いていない方向の別のタイルが、置いてあって（!=0）、開いていないなら
-                // 空きスペースを作った可能性がある
-                // 455900
-                // c9c34b
-                // a6380a <- ここの0みたいなのを空きスペースと言った
-                // 698edb
-                // 067300
-                // 000000
-                // 空きスペースチェックを走らせて、空きスペースが本当にあったらfalseを返したい
-                if i2 < input.n
-                    && j2 < input.n
-                    && now_tiles[i2][j2] != 0
-                    && (now_tiles[i2][j2] >> (d ^ 2)) & 1 == 0
-                {
-                    can_empty_space = true;
-                }
-                // こういう空きスペースも検知したい
-                // 800880
-                // 655ba0
-                // 00c3a0
-                // 00acb0
-                // 006ba0
-                // 000200
-                // 壁に接するところに置いたときで、どこにも開いてなければ走らせるとよさげ？
-                if i2 >= input.n || j2 >= input.n {
-                    can_empty_space2 = true;
-                }
-            }
-        }
-        if is_place {
-            if dij.is_empty() {
-                now_tiles[pos.0][pos.1] = tile_i;
-                tile_count[tile_i] -= 1;
-                if 1 < connect_count && find_cycle(pos, input, now_tiles) {
-                    now_tiles[pos.0][pos.1] = 0;
-                    tile_count[tile_i] += 1;
-                    continue;
-                }
-                if tile_count.iter().skip(1).sum::<i32>() == 0 && !find_cycle(pos, input, now_tiles)
-                {
-                    let mut tree_tiles = vec![vec![0; input.n]; input.n];
-                    for (i, row) in now_tiles.iter().enumerate() {
-                        for (j, t) in row.iter().enumerate() {
-                            tree_tiles[i][j] = *t;
-                        }
-                    }
-                    // eprintln!("count: {}", count);
-                    // for row in now_tiles.iter() {
-                    //     for t in row.iter() {
-                    //         eprint!("{:x}", t);
-                    //     }
-                    //     eprintln!();
-                    // }
-                    // eprintln!();
-                    // for row in now_tiles.iter() {
-                    //     for t in row.iter() {
-                    //         eprint!("{:2} ", t);
-                    //     }
-                    //     eprintln!();
-                    // }
-                    if let Some(out) = construct(input, &mut tree_tiles) {
-                        println!("{}", out.iter().take(input.t).join(""));
-                        return true;
-                    }
-                    // parity checkに失敗したらNoneが返る
-                }
-                if (can_empty_space || open_count == 0 && can_empty_space2)
-                    && is_empty_space(input, now_tiles)
-                {
-                    now_tiles[pos.0][pos.1] = 0;
-                    tile_count[tile_i] += 1;
-                    continue;
-                }
-                // if !is_connected(pos, input, now_tiles) {
-                //     now_tiles[pos.0][pos.1] = 0;
-                //     tile_count[tile_i] += 1;
-                //     continue;
-                // }
-                for ni in (0..next_poses.len()).rev() {
-                    if now_tiles[next_poses[ni].0][next_poses[ni].1] != 0 {
-                        continue;
-                    }
-                    if dfs(
-                        (next_poses[ni].0, next_poses[ni].1),
-                        input,
-                        tile_count,
-                        now_tiles,
-                        next_poses,
-                        tile_is,
-                        count,
-                        timer,
-                    ) {
-                        return true;
-                    }
-                }
-                now_tiles[pos.0][pos.1] = 0;
-                tile_count[tile_i] += 1;
-            } else {
-                next_poses.extend_from_slice(&dij);
-                now_tiles[pos.0][pos.1] = tile_i;
-                tile_count[tile_i] -= 1;
-                if (can_empty_space || open_count == 0 && can_empty_space2)
-                    && is_empty_space(input, now_tiles)
-                {
-                    now_tiles[pos.0][pos.1] = 0;
-                    tile_count[tile_i] += 1;
-                    for _ in 0..dij.len() {
-                        next_poses.pop();
-                    }
-                    continue;
-                }
-                if 1 < connect_count && find_cycle(pos, input, now_tiles) {
-                    now_tiles[pos.0][pos.1] = 0;
-                    tile_count[tile_i] += 1;
-                    for _ in 0..dij.len() {
-                        next_poses.pop();
-                    }
-                    continue;
-                }
-                for &(i2, j2) in dij.iter() {
-                    if dfs(
-                        (i2, j2),
-                        input,
-                        tile_count,
-                        now_tiles,
-                        next_poses,
-                        tile_is,
-                        count,
-                        timer,
-                    ) {
-                        return true;
-                    }
-                }
-                now_tiles[pos.0][pos.1] = 0;
-                tile_count[tile_i] += 1;
-                for _ in 0..dij.len() {
-                    next_poses.pop();
-                }
-            }
-        }
-    }
-    *count += 1;
-    // if *count <= 1000000 && *count % 100000 == 0 {
-    // eprintln!("count: {}", count);
-    // eprintln!("{:?}", tile_count);
-    // eprintln!("{} {}", input.n, input.t);
-    // for row in now_tiles.iter() {
-    //     for t in row.iter() {
-    //         if *t == 16 {
-    //             eprint!("{:x}", 0);
-    //         } else {
-    //             eprint!("{:x}", t);
-    //         }
-    //     }
-    //     eprintln!();
-    // }
-    // }
-    false
-}
-
-#[allow(dead_code)]
-fn is_connected(pos: (usize, usize), input: &Input, tiles: &[Vec<usize>]) -> bool {
-    // posからBFSして今置いてあるタイルに全部行けるかチェック
-    let mut que = VecDeque::new();
-    let mut visited = vec![vec![false; input.n]; input.n];
-    visited[pos.0][pos.1] = true;
-    que.push_back(pos);
-    while !que.is_empty() {
-        let v = que.pop_front().unwrap();
-        for (d, (di, dj)) in DIJ.iter().enumerate() {
-            let ni = v.0 + *di;
-            let nj = v.1 + *dj;
-            if ni >= input.n || nj >= input.n {
-                continue;
-            }
-            if tiles[v.0][v.1] != 0 && tiles[v.0][v.1] != 16 && tiles[v.0][v.1] & (1 << d) == 0 {
-                // tileが開いてない方向には進めない
-                continue;
-            }
-            if visited[ni][nj] {
-                continue;
-            }
-            if tiles[ni][nj] != 0 && tiles[ni][nj] != 16 && tiles[ni][nj] & (1 << (d ^ 2)) == 0 {
-                // 空きマスでなくてタイルが開いてないなら進んではいけない
-                continue;
-            }
-            visited[ni][nj] = true;
-            que.push_back((ni, nj));
-        }
-    }
-    for i in 0..input.n {
-        for j in 0..input.n {
-            if tiles[i][j] != 0 && tiles[i][j] != 16 && !visited[i][j] {
-                return false;
-            }
-        }
-    }
-    true
-}
-
-fn find_cycle(pos: (usize, usize), input: &Input, tiles: &[Vec<usize>]) -> bool {
-    // posからbfsして2回訪れる場所があればcycleあり
-    let mut que = VecDeque::new();
-    let mut visited = vec![vec![false; input.n]; input.n];
-    visited[pos.0][pos.1] = true;
-    que.push_back((pos, 4));
-    while !que.is_empty() {
-        let (v, prev_d) = que.pop_front().unwrap();
-        for (d, (di, dj)) in DIJ.iter().enumerate() {
-            let ni = v.0 + *di;
-            let nj = v.1 + *dj;
-            if ni >= input.n || nj >= input.n {
-                continue;
-            }
-            if d ^ 2 == prev_d {
-                // 来た方向に戻るのを禁止
-                continue;
-            }
-            if tiles[v.0][v.1] & (1 << d) == 0 {
-                // tileが開いてない方向には進めない
-                continue;
-            }
-            if visited[ni][nj] {
-                // 閉路あり
-                return true;
-            }
-            visited[ni][nj] = true;
-            que.push_back(((ni, nj), d));
-        }
-    }
-    false
-}
-
 fn parity_check(input: &Input, tiles: &[usize], tree_tiles: &[Vec<usize>]) -> bool {
     // 右下にめっちゃ同じ数あったら大体成功しそう
     let mut set = HashSet::new();
@@ -4458,4 +4131,50 @@ impl Timer {
     // fn reset(&mut self) {
     //     self.start_time = get_time();
     // }
+}
+
+use std::cell::Cell;
+
+#[derive(Clone, Debug)]
+pub struct UnionFind {
+    /// size / parent
+    ps: Vec<Cell<usize>>,
+    pub is_root: Vec<bool>,
+}
+
+impl UnionFind {
+    pub fn new(n: usize) -> UnionFind {
+        UnionFind {
+            ps: vec![Cell::new(1); n],
+            is_root: vec![true; n],
+        }
+    }
+    pub fn find(&self, x: usize) -> usize {
+        if self.is_root[x] {
+            x
+        } else {
+            let p = self.find(self.ps[x].get());
+            self.ps[x].set(p);
+            p
+        }
+    }
+    pub fn unite(&mut self, x: usize, y: usize) {
+        let mut x = self.find(x);
+        let mut y = self.find(y);
+        if x == y {
+            return;
+        }
+        if self.ps[x].get() < self.ps[y].get() {
+            ::std::mem::swap(&mut x, &mut y);
+        }
+        *self.ps[x].get_mut() += self.ps[y].get();
+        self.ps[y].set(x);
+        self.is_root[y] = false;
+    }
+    pub fn same(&self, x: usize, y: usize) -> bool {
+        self.find(x) == self.find(y)
+    }
+    pub fn size(&self, x: usize) -> usize {
+        self.ps[self.find(x)].get()
+    }
 }
